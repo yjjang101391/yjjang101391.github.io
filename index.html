@@ -558,9 +558,9 @@
 </div>
 
 <div id="webLoading" style="position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:3000;background:#2b2a28;color:#fff;font-size:13px;padding:9px 16px;border-radius:999px;box-shadow:0 3px 12px rgba(0,0,0,.25)">자료를 불러오는 중이에요 (처음 한 번 몇 초 걸려요)</div>
-<script src="data/apt_data_1.js?v=202611090920"></script>
-<script src="data/apt_data_2.js?v=202611090920"></script>
-<script src="data/apt_data_3.js?v=202611090920"></script>
+<script src="data/apt_data_1.js?v=202611090956"></script>
+<script src="data/apt_data_2.js?v=202611090956"></script>
+<script src="data/apt_data_3.js?v=202611090956"></script>
 <script>
   // 단지 데이터 (점수+가격+이름+주소+세대수+좌표 병합)
   //  s=[역세권,교육,공원,상권,병원,즐길거리] 점수, lat/lng=좌표
@@ -2001,7 +2001,8 @@
   }
 
   // ── v0.6.0: 목록 범위 · 결과 바로 보기 · 휴대폰 지도 · 3곳 요약 · 대출 계산 — AI 생성 ──────
-  function scoped(){ return mapScope && !!searchBounds && !!map; }    // 목록을 지도에 보이는 범위로 좁히는 중인지
+  // 목록을 지도에 보이는 범위로 좁히는 중인지. 휴대폰처럼 지도가 숨겨져 있으면(폭 0) 범위가 없으므로 고른 지역 전체로 본다
+  function scoped(){ return mapScope && !!searchBounds && !!map && document.getElementById("map").offsetWidth > 0; }
   window.setScope = function(on){
     mapScope = on; expanded = -1;
     if(!on) zoomOutAll();
