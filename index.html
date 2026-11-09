@@ -183,7 +183,7 @@
     width:max-content;max-width:min(340px, 82vw);white-space:pre-line;text-align:left;background:#2b2a28;color:#fff;font-size:12px;font-weight:400;line-height:1.55;
     padding:8px 11px;border-radius:8px;box-shadow:0 3px 12px rgba(0,0,0,.2);pointer-events:none}
   @media (prefers-color-scheme: dark){ .cwhy[data-tip]:hover::after,.cwhy[data-tip]:focus::after{background:#e8e6e0;color:#191918} }
-  .verdict{margin-top:9px;font-size:13px;background:var(--head);border-radius:8px;padding:8px 11px}
+  .verdict{margin:0 0 9px;font-size:13px;background:var(--head);border-radius:8px;padding:8px 11px}
   .row{background:var(--card);border:1px solid var(--border);border-radius:12px;
     padding:13px 15px;display:flex;align-items:center;gap:13px;cursor:pointer}
   .row:hover{border-color:var(--accent)}
@@ -290,6 +290,24 @@
     margin-right:5px;vertical-align:middle}
   .cbar i{display:block;height:100%;background:var(--accent)}
   .cmptray:empty{display:none}
+  /* 찜·비교 팝업 (2026-11-09) */
+  .cmodal{display:none;position:fixed;inset:0;z-index:2000;background:rgba(0,0,0,.45);padding:20px 10px;overflow:auto}
+  .cmodal.on{display:block}
+  .cmodal .cmin{max-width:760px;margin:0 auto;background:var(--bg);border-radius:14px;padding:14px 14px 18px;box-shadow:0 8px 30px rgba(0,0,0,.3)}
+  .cmodal .cmtop{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;font-size:15px;font-weight:700}
+  .cmodal .cmclose{font-size:13px;padding:7px 13px;border-radius:999px;border:1px solid var(--border);background:var(--card);color:var(--text);cursor:pointer}
+  .cmodal .wishlist{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:6px 10px}
+  .cmodal .wishnote{margin:8px 0 12px}
+  .cmodal .pickbtn{width:24px;height:24px}
+  body.modalopen{overflow:hidden}
+  .cmodal .cmpbox{overflow-x:auto}
+  @media (max-width:900px){
+    .cmodal .wishlist .wd{display:none}            /* 이름이 보이게 동·연식은 숨김 */
+    .cmodal .wishlist .wp{width:auto}
+    .cmodal .cmptab{font-size:12px}
+    .cmodal .cmptab th,.cmodal .cmptab td{padding:5px 3px}
+    .cmodal .cmptab .cbar{display:none}             /* 숫자만: 3곳이 한 화면에 */
+  }
   .cmptray{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(14px + env(safe-area-inset-bottom, 0px));
     z-index:1100;display:flex;align-items:center;gap:10px;max-width:calc(100% - 32px);background:var(--card);
     border:1px solid var(--accent);border-radius:999px;padding:8px 10px 8px 16px;box-shadow:0 4px 18px rgba(0,0,0,.18);font-size:13px}
@@ -580,6 +598,7 @@
   <div id="tips" class="tips"></div>
     <div id="results"></div>
     <div id="cmpTray" class="cmptray"></div>
+    <div id="cmpModal" class="cmodal" onclick="if(event.target === this) closeCmp()"></div>
     <button id="goRes" class="gores" onclick="goResults()"></button>
     </div>
 
@@ -644,9 +663,9 @@
 </div>
 
 <div id="webLoading" style="position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:3000;background:#2b2a28;color:#fff;font-size:13px;padding:9px 16px;border-radius:999px;box-shadow:0 3px 12px rgba(0,0,0,.25)">자료를 불러오는 중이에요 (처음 한 번 몇 초 걸려요)</div>
-<script src="data/apt_data_1.js?v=202611091116"></script>
-<script src="data/apt_data_2.js?v=202611091116"></script>
-<script src="data/apt_data_3.js?v=202611091116"></script>
+<script src="data/apt_data_1.js?v=202611091136"></script>
+<script src="data/apt_data_2.js?v=202611091136"></script>
+<script src="data/apt_data_3.js?v=202611091136"></script>
 <script>
   // 단지 데이터 (점수+가격+이름+주소+세대수+좌표 병합)
   //  s=[역세권,교육,공원,상권,병원,즐길거리] 점수, lat/lng=좌표
@@ -1606,7 +1625,7 @@
     if(ev) ev.stopPropagation();          // 카드 열림 방지
     const k = wish.indexOf(name);
     if(k >= 0){ wish.splice(k, 1); const c = cmpSel.indexOf(name); if(c >= 0) cmpSel.splice(c, 1); }
-    else wish.push(name);
+    else { wish.push(name); if(cmpSel.length < CMP_MAX) cmpSel.push(name); }
     wishSave(); render(false);
   };
   window.wishPanel = function(){ wishOpen = !wishOpen; render(false); };
@@ -1635,11 +1654,38 @@
   };
   // 화면 아래 비교 바: 담은 단지와 '비교 보기'
   function trayHTML(){
-    if(!cmpSel.length) return '';
-    return '<span class="ct">비교 ' + cmpSel.length + '/' + CMP_MAX + '</span>' +
-      '<span class="cn">' + cmpSel.map(k => (BYID.get(k) || { n: '' }).n).map(n => n.length > 12 ? n.slice(0, 12) + '…' : n).join(' · ') + '</span>' +
-      (cmpSel.length >= 2 ? '<button onclick="cmpShow()">비교 보기</button>' : '<span class="ch">하나 더 담으면 비교돼요</span>') +
-      '<button class="cx" onclick="cmpClear()">비우기</button>';
+    if(!wish.length || cmpOpen) return '';
+    return '<span class="ct">♥ 찜 ' + wish.length + '곳</span>' +
+      '<span class="cn">' + wish.map(k => (BYID.get(k) || { n: '' }).n).map(n => n.length > 12 ? n.slice(0, 12) + '…' : n).join(' · ') + '</span>' +
+      '<button onclick="openCmp()">' + (wish.length >= 2 ? '비교 보기' : '찜 보기') + '</button>';
+  }
+  // 찜·비교 팝업: 찜한 단지 목록(✓ = 비교할 3곳) + 비교 표. 목록 위로 오르내리지 않게 팝업으로
+  let cmpOpen = false;
+  window.openCmp = function(){
+    cmpSel = cmpSel.filter(k => wish.includes(k));
+    if(!cmpSel.length) cmpSel = wish.slice(0, CMP_MAX);
+    cmpOpen = true; document.body.classList.add("modalopen"); render(false);
+  };
+  window.closeCmp = function(){ cmpOpen = false; document.body.classList.remove("modalopen"); render(false); };
+  function modalHTML(w){
+    const top = '<div class="cmtop"><span>♥ 찜한 단지 ' + wish.length + '곳</span><button class="cmclose" onclick="closeCmp()">✕ 닫기</button></div>';
+    if(!wish.length) return '<div class="cmin">' + top + '<div class="wishnote">카드의 ♡ 찜을 눌러 담으세요.</div></div>';
+    const rows = wish.map(n => {
+      const x = BYID.get(n);
+      if(!x) return '';
+      const on = cmpSel.includes(n), q = JSON.stringify(n).replace(/"/g, "&quot;");
+      return '<li' + (on ? ' class="on"' : '') + '>' +
+        '<button class="pickbtn" onclick="cmpPick(' + q + ')" title="비교에 넣기/빼기">' + (on ? '✓' : '') + '</button>' +
+        '<span class="wn">' + x.n + '</span>' +
+        '<span class="wd">' + x.d + (x.y ? ' · ' + x.y + '년' : '') + '</span>' +
+        '<span class="wp">' + won(minPrice(x)) + '</span>' +
+        '<span class="ws">' + s10(totalScore(x, w)) + '</span>' +
+        '<button class="delbtn" onclick="wishToggle(' + q + ', event)" title="찜 빼기">✕</button></li>';
+    }).join('');
+    return '<div class="cmin">' + top + '<ul class="wishlist">' + rows + '</ul>' +
+      '<div class="wishnote">✓ 표시한 단지끼리 비교해요 (최대 ' + CMP_MAX + '곳) · <button class="linkbtn" onclick="wishExcel()">엑셀로 받기</button> · ' +
+      '<button class="linkbtn" onclick="wishClear()">전체 비우기</button></div>' +
+      (cmpSel.length >= 2 ? compareHTML(w) : '<div class="wishnote">2곳 이상 ✓ 하면 비교 표가 나와요.</div>') + '</div>';
   }
 
   window.toggle = function(i){
@@ -2028,10 +2074,9 @@
         + (lead ? ' — 가장 중요하게 보신 <b>' + top.nm + '</b>에서도 우위예요.' : '.') + '</div>';
     }
     return '<div class="cmpbox">' +
-      '<div class="cmphead"><span>단지 비교 (' + xs.length + ')</span><span><button class="cmpclear xl" onclick="cmpExcel()">⬇ 엑셀로 받기</button> ' +
-        '<button class="cmpclear" onclick="cmpClear()">비우기</button></span></div>' +
-      '<table class="cmptab"><thead><tr><th></th>' + th + '</tr></thead><tbody>' + body + '</tbody></table>' +
-      verdict + '</div>';
+      '<div class="cmphead"><span>단지 비교 (' + xs.length + ')</span><span><button class="cmpclear xl" onclick="cmpExcel()">⬇ 비교표 엑셀</button></span></div>' +
+      verdict +
+      '<table class="cmptab"><thead><tr><th></th>' + th + '</tr></thead><tbody>' + body + '</tbody></table></div>';
   }
 
   // ── v0.5.8: 예산·평형 필수 안내 · 단계 표시 · 조건 링크 — AI 생성 ──────────
@@ -2403,28 +2448,11 @@
     const bar = '<div class="wishbar">' +
       '<span class="sortnote"><b>종합점수 높은 순</b> · 교통·교육·보육·의료·생활편의 등 9개 항목 점수를 내 상황의 중요도로 평균했어요 ' +
       '<button class="linkbtn" onclick="toggleScoreHelp()">' + (scoreHelpOpen ? '닫기' : '자세히') + '</button></span>' +
-      '<button class="wishbtn' + (wish.length ? ' has' : '') + '" onclick="wishPanel()">' +
-      '♥ 찜 ' + wish.length + '개' + (wish.length ? (wishOpen ? ' 닫기' : ' 보기') : '') + '</button>' +
-      (wish.length ? '<button class="cmpclear xl" onclick="wishExcel()">⬇ 엑셀로 받기</button> <button class="cmpclear" onclick="wishClear()">전체 비우기</button>' : '') +
+      '<button class="wishbtn' + (wish.length ? ' has' : '') + '" onclick="openCmp()">' +
+      '♥ 찜 ' + wish.length + '개' + (wish.length >= 2 ? ' · 비교' : wish.length ? ' 보기' : '') + '</button>' +
       '</div>';
     const help = scoreHelpOpen ? scoreHelpHTML(w) : '';
-    if(!wishOpen || !wish.length) return bar + help;
-    const rows = wish.map(n => {
-      const x = BYID.get(n);
-      if(!x) return '';
-      const on = cmpSel.includes(n);
-      const q = JSON.stringify(n).replace(/"/g, "&quot;");
-      return '<li' + (on ? ' class="on"' : '') + '>' +
-        '<button class="pickbtn" onclick="cmpPick(' + q + ')">' + (on ? '✓' : '') + '</button>' +
-        '<span class="wn">' + x.n + '</span>' +
-        '<span class="wd">' + x.d + (x.y ? ' · ' + x.y + '년' : '') + '</span>' +
-        '<span class="wp">' + won(minPrice(x)) + '</span>' +
-        '<span class="ws">' + s10(totalScore(x, w)) + '</span>' +
-        '<button class="delbtn" onclick="wishToggle(' + q + ', event)">✕</button></li>';
-    }).join('');
-    return bar + help + '<div class="wishbox"><ul class="wishlist">' + rows + '</ul>' +
-      '<div class="wishnote">비교할 단지를 ' + CMP_MAX + '개까지 눌러서 고르세요. ' +
-      '(' + cmpSel.length + '개 선택됨)</div></div>';
+    return bar + help;                          // 찜 목록·비교는 팝업(modalHTML)에서
   }
 
   function cardHTML(x, i, f, w, rk, pin){
@@ -2455,9 +2483,7 @@
         '<button class="cmpbtn' + (wish.includes(uid(x)) ? ' on' : '') +
           '" onclick="wishToggle(' + JSON.stringify(uid(x)).replace(/"/g, "&quot;") + ', event)">' +
           (wish.includes(uid(x)) ? '♥ 찜' : '♡ 찜') + '</button>' +
-        '<button class="cmpbtn' + (cmpSel.includes(uid(x)) ? ' on' : '') +
-          '" onclick="cmpQuick(' + JSON.stringify(uid(x)).replace(/"/g, "&quot;") + ', event)">' +
-          (cmpSel.includes(uid(x)) ? '✓ 비교' : '+ 비교') + '</button></div>' +
+        '</div>' +
         '<div class="total"><div class="num">' + s10(tot) + '</div>' +
           '<div class="cap">종합</div>' +
           '<div class="totbar"><i style="width:' + Math.round(tot) + '%;background:' + scoreColor(tot) + '"></i></div></div>' +
@@ -2500,6 +2526,8 @@
     const gh = gateHTML(nFail, nUnknown, w);
     document.getElementById("gateBox").innerHTML = gh;
     document.getElementById("cmpTray").innerHTML = trayHTML();
+    const cmEl = document.getElementById("cmpModal");
+    if(cmEl){ cmEl.classList.toggle("on", cmpOpen); cmEl.innerHTML = cmpOpen ? modalHTML(w) : ''; }
     const GORD = { pass: 0, unknown: 1, fail: 2 };
 
     const ranked = pool.map(x => ({ x, t: totalScore(x, w) }))
@@ -2570,7 +2598,7 @@
       if(!pinX) expanded = -1;
       countEl.textContent = '';
       if(tipEl) tipEl.innerHTML = '';
-      resultsEl.innerHTML = guideHTML(f) + wishHTML(w) + compareHTML(w) + shownList.map((r, i) => cardHTML(r.x, i, f, w, null, true)).join('');
+      resultsEl.innerHTML = guideHTML(f) + wishHTML(w) + shownList.map((r, i) => cardHTML(r.x, i, f, w, null, true)).join('');
       updateMap();
       return;
     }
@@ -2584,13 +2612,13 @@
         : scoped()
           ? '지도에 보이는 단지 ' + inView + '곳 중 이 조건에 맞는 곳이 없어요.' + (loose ? '<br>예산·평형 조건을 빼면 ' + loose + '곳이 있어요.' : '')
           : '조건에 맞는 단지가 없어요.<br>위 안내처럼 예산·평형을 넓혀 보세요.';
-      resultsEl.innerHTML = wishHTML(w) + compareHTML(w) + '<div class="empty">' + msg +
+      resultsEl.innerHTML = wishHTML(w) + '<div class="empty">' + msg +
         (scoped() && nAll ? '<br><button class="reset" onclick="setScope(false)">조건에 맞는 전체 ' + nAll + '곳 보기</button>' : '') + '</div>';
       updateMap();
       return;
     }
     applyPin(ranked, w);
-    resultsEl.innerHTML = wishHTML(w) + compareHTML(w) + shownList.map((r, i) => cardHTML(r.x, i, f, w, r.rk, r.pin)).join('') +
+    resultsEl.innerHTML = wishHTML(w) + shownList.map((r, i) => cardHTML(r.x, i, f, w, r.rk, r.pin)).join('') +
       (ranked.length > topN ? '<button class="moreres" onclick="moreResults()">' + TOP_N + '곳 더 보기 <span>(' + topN + ' / ' + ranked.length + '곳)</span></button>' : '');
     updateMap();
   }
