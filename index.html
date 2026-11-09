@@ -34,6 +34,14 @@
   h1{font-size:22px;font-weight:600;margin:0 0 4px}
   .sub{color:var(--muted);font-size:13.5px;margin:0 0 16px}
   .tabs{display:flex;gap:4px;border-bottom:1px solid var(--border);margin-bottom:18px}
+  /* 한 화면: 추천 아래 펼치는 칸 (동네 배경 · 점수 기준) */
+  .sect{margin-top:16px;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:0 16px}
+  .sect > summary{cursor:pointer;list-style:none;padding:14px 0;font-size:15px;font-weight:700}
+  .sect > summary::-webkit-details-marker{display:none}
+  .sect > summary span{font-size:12.5px;font-weight:400;color:var(--muted);margin-left:6px}
+  .sect > summary::after{content:"▾";float:right;color:var(--muted)}
+  .sect[open] > summary::after{content:"▴"}
+  .sect > .doc{padding-bottom:16px}
   .tab{font-size:14px;padding:9px 16px;border:none;background:none;color:var(--muted);
     cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;font-weight:500}
   .tab:hover{color:var(--text)}
@@ -482,53 +490,6 @@
     <p class="dataline" id="dataline"></p>
   </header>
 
-  <div class="tabs">
-    <button class="tab on" data-tab="rec">아파트 추천</button>
-    <button class="tab" data-tab="bg">동네 배경</button>
-    <button class="tab" data-tab="score">점수 기준</button>
-  </div>
-
-  <div id="panel-bg" class="panel-tab" style="display:none">
-    <div class="doc" id="bgDoc"></div>
-  </div>
-
-  <div id="panel-score" class="panel-tab" style="display:none">
-    <div class="doc">
-      <b>이렇게 골라요</b>
-      <ol class="steps"><li><strong>꼭 필요한 조건</strong>으로 거르고</li><li><strong>9개 항목 점수</strong>로 순위를 매기고</li><li><strong>검증 표시</strong>로 한 번 더 확인해요</li></ol>
-      <b>꼭 필요한 조건 (안 맞으면 목록에서 빠져요)</b>
-      <table class="gutab sc"><tbody>
-        <tr><th>1인 가구 · 신혼</th><td>지하철역 걸어서 20분 (1km)</td></tr>
-        <tr><th>영유아</th><td>어린이집 10분 · 소아과 20분 (아이 걸음)</td></tr>
-        <tr><th>초등 자녀</th><td>배정 초등학교 15분 (아이 걸음, 590m)</td></tr>
-        <tr><th>중·고 자녀</th><td>없음</td></tr>
-        <tr><th>시니어</th><td>내과 · 약국 15분 (어르신 걸음, 480m) · 엘리베이터</td></tr>
-      </tbody></table>
-      <b>항목별 기준 (10점 → 0점)</b>
-      <table class="gutab sc crit"><thead><tr><th>항목</th><th>무엇으로 재나</th><th>10점 → 0점</th></tr></thead><tbody>
-        <tr><th>교통</th><td>주변 지하철역 · 환승역은 더 가깝게, 지선·경전철은 더 멀게 쳐요</td><td>걸어서 5분(250m) → 20분(1km)</td></tr>
-        <tr><th>교육</th><td>초등: 배정 초등학교 거리 · 중·고: 입시학원 수(1km)</td><td>아이 걸음 5분(200m) → 15분(590m) · 학원 수는 많을수록</td></tr>
-        <tr><th>보육</th><td>어린이집·유치원 거리 + 500m 안 개수</td><td>아이 걸음 5분(200m) → 10분(390m)</td></tr>
-        <tr><th>의료</th><td>영유아 소아과 · 1인 내과 · 신혼 내과+소아과 · 시니어 내과·약국·종합병원 · 그 외 병원 수</td><td>걸어서 5분 → 20분 (종합병원 2km → 8km)</td></tr>
-        <tr><th>공원</th><td>근린공원(산책·운동할 만한 공원) · 자녀 가정은 집 앞 작은 공원도 30% 반영</td><td>걸어서 5분 → 20분</td></tr>
-        <tr><th>생활편의</th><td>음식점·카페 수(1km) + 대형마트·슈퍼 거리</td><td>수는 많을수록 · 마트 5분 → 20분</td></tr>
-        <tr><th>여가</th><td>1인·신혼 문화·헬스 시설 수 + 문화센터 · 영유아·초등 도서관 + 문화센터 · 중·고 도서관 · 시니어 복지관 + 문화센터</td><td>수는 많을수록 · 거리 5분 → 20분</td></tr>
-        <tr><th>단지</th><td>연식 + 세대수 (차 있으면 주차)</td><td>신축 → 30년 · 세대수 많을수록 (정보 없으면 0점)</td></tr>
-        <tr><th>시장평가</th><td>같은 시·구 안 평당가 순위</td><td>비쌀수록 높음 · 기본 중요도 3</td></tr>
-      </tbody></table>
-      <p class="note" style="margin-top:4px;padding-top:0;border:none">'많을수록'은 앱에 담긴 전체 단지 중 순위예요. 거리는 걷는 사람 기준이라 아이·어르신은 같은 시간이라도 거리가 짧아요.</p>
-      <b>검증 표시</b>
-      <table class="gutab sc"><tbody>
-        <tr><th>안정 추천</th><td>중요도를 조금씩 바꿔도 상위 10위에 남는 단지</td></tr>
-        <tr><th>점수 대비 저렴·비쌈</th><td>같은 점수대 단지보다 많이 싸거나 비싼 단지</td></tr>
-        <tr><th>주의</th><td>중요한 항목이 약하거나 꼭 확인할 점이 있는 단지</td></tr>
-      </tbody></table>
-      <p class="note">걸음 속도는 어른 70 · 아이 55 · 어르신 45 m/분, 길은 직선의 1.4배로 계산해요.
-        학군 수준·통학로·경사·소음은 데이터로 알 수 없으니 현장에서 확인하세요.<br>
-        출처: 국토교통부 실거래가 · 카카오맵 · 학구도(한국교육시설안전원) · 공공데이터포털 표준데이터 · 공동주택 정보</p>
-    </div>
-  </div>
-
   <div id="panel-rec" class="panel-tab">
   <div class="layout">
     <div class="col-left">
@@ -611,12 +572,52 @@
     </div>
   </div>
   </div>
+  <!-- 탭 대신 한 화면: 동네 배경 · 점수 기준은 추천 아래 펼치는 칸 (2026-11-09) -->
+  <details class="sect" id="sec-bg"><summary>🏘 동네 배경 <span>과거 · 지금 · 앞으로</span></summary>
+    <div class="doc" id="bgDoc"></div>
+  </details>
+  <details class="sect" id="sec-score"><summary>📏 점수 기준 <span>어떻게 순위를 매기나</span></summary>
+    <div class="doc">
+      <b>이렇게 골라요</b>
+      <ol class="steps"><li><strong>꼭 필요한 조건</strong>으로 거르고</li><li><strong>9개 항목 점수</strong>로 순위를 매기고</li><li><strong>검증 표시</strong>로 한 번 더 확인해요</li></ol>
+      <b>꼭 필요한 조건 (안 맞으면 목록에서 빠져요)</b>
+      <table class="gutab sc"><tbody>
+        <tr><th>1인 가구 · 신혼</th><td>지하철역 걸어서 20분 (1km)</td></tr>
+        <tr><th>영유아</th><td>어린이집 10분 · 소아과 20분 (아이 걸음)</td></tr>
+        <tr><th>초등 자녀</th><td>배정 초등학교 15분 (아이 걸음, 590m)</td></tr>
+        <tr><th>중·고 자녀</th><td>없음</td></tr>
+        <tr><th>시니어</th><td>내과 · 약국 15분 (어르신 걸음, 480m) · 엘리베이터</td></tr>
+      </tbody></table>
+      <b>항목별 기준 (10점 → 0점)</b>
+      <table class="gutab sc crit"><thead><tr><th>항목</th><th>무엇으로 재나</th><th>10점 → 0점</th></tr></thead><tbody>
+        <tr><th>교통</th><td>주변 지하철역 · 환승역은 더 가깝게, 지선·경전철은 더 멀게 쳐요</td><td>걸어서 5분(250m) → 20분(1km)</td></tr>
+        <tr><th>교육</th><td>초등: 배정 초등학교 거리 · 중·고: 입시학원 수(1km)</td><td>아이 걸음 5분(200m) → 15분(590m) · 학원 수는 많을수록</td></tr>
+        <tr><th>보육</th><td>어린이집·유치원 거리 + 500m 안 개수</td><td>아이 걸음 5분(200m) → 10분(390m)</td></tr>
+        <tr><th>의료</th><td>영유아 소아과 · 1인 내과 · 신혼 내과+소아과 · 시니어 내과·약국·종합병원 · 그 외 병원 수</td><td>걸어서 5분 → 20분 (종합병원 2km → 8km)</td></tr>
+        <tr><th>공원</th><td>근린공원(산책·운동할 만한 공원) · 자녀 가정은 집 앞 작은 공원도 30% 반영</td><td>걸어서 5분 → 20분</td></tr>
+        <tr><th>생활편의</th><td>음식점·카페 수(1km) + 대형마트·슈퍼 거리</td><td>수는 많을수록 · 마트 5분 → 20분</td></tr>
+        <tr><th>여가</th><td>1인·신혼 문화·헬스 시설 수 + 문화센터 · 영유아·초등 도서관 + 문화센터 · 중·고 도서관 · 시니어 복지관 + 문화센터</td><td>수는 많을수록 · 거리 5분 → 20분</td></tr>
+        <tr><th>단지</th><td>연식 + 세대수 (차 있으면 주차)</td><td>신축 → 30년 · 세대수 많을수록 (정보 없으면 0점)</td></tr>
+        <tr><th>시장평가</th><td>같은 시·구 안 평당가 순위</td><td>비쌀수록 높음 · 기본 중요도 3</td></tr>
+      </tbody></table>
+      <p class="note" style="margin-top:4px;padding-top:0;border:none">'많을수록'은 앱에 담긴 전체 단지 중 순위예요. 거리는 걷는 사람 기준이라 아이·어르신은 같은 시간이라도 거리가 짧아요.</p>
+      <b>검증 표시</b>
+      <table class="gutab sc"><tbody>
+        <tr><th>안정 추천</th><td>중요도를 조금씩 바꿔도 상위 10위에 남는 단지</td></tr>
+        <tr><th>점수 대비 저렴·비쌈</th><td>같은 점수대 단지보다 많이 싸거나 비싼 단지</td></tr>
+        <tr><th>주의</th><td>중요한 항목이 약하거나 꼭 확인할 점이 있는 단지</td></tr>
+      </tbody></table>
+      <p class="note">걸음 속도는 어른 70 · 아이 55 · 어르신 45 m/분, 길은 직선의 1.4배로 계산해요.
+        학군 수준·통학로·경사·소음은 데이터로 알 수 없으니 현장에서 확인하세요.<br>
+        출처: 국토교통부 실거래가 · 카카오맵 · 학구도(한국교육시설안전원) · 공공데이터포털 표준데이터 · 공동주택 정보</p>
+    </div>
+  </details>
 </div>
 
 <div id="webLoading" style="position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:3000;background:#2b2a28;color:#fff;font-size:13px;padding:9px 16px;border-radius:999px;box-shadow:0 3px 12px rgba(0,0,0,.25)">자료를 불러오는 중이에요 (처음 한 번 몇 초 걸려요)</div>
-<script src="data/apt_data_1.js?v=202611091038"></script>
-<script src="data/apt_data_2.js?v=202611091038"></script>
-<script src="data/apt_data_3.js?v=202611091038"></script>
+<script src="data/apt_data_1.js?v=202611091043"></script>
+<script src="data/apt_data_2.js?v=202611091043"></script>
+<script src="data/apt_data_3.js?v=202611091043"></script>
 <script>
   // 단지 데이터 (점수+가격+이름+주소+세대수+좌표 병합)
   //  s=[역세권,교육,공원,상권,병원,즐길거리] 점수, lat/lng=좌표
@@ -1137,7 +1138,7 @@
     el.innerHTML = '<span class="prio"><span class="pl hi">중요하게</span>' +
       hi.map(d => '<span class="pt hi">' + d.nm + '<i>' + d.v + '</i></span>').join('') +
       '<button class="pchg" onclick="openWeights()">중요도 바꾸기</button></span>' +
-      (lo.length ? '<span class="prio"><span class="pl lo">' + (lo.every(d => d.v === 0) ? '안 봐요' : '덜 봐요') + '</span>' +
+      (lo.length ? '<span class="prio"><span class="pl lo">' + (lo.every(d => d.v === 0) ? '반영 안 함' : '적게 반영') + '</span>' +
         lo.map(d => '<span class="pt lo">' + d.nm + '</span>').join('') + '</span>' : '') +
       (child ? '<br>자녀 단계는 여러 개 고를 수 있어요.' : '');
   }
@@ -2335,7 +2336,14 @@
   // 점수 기준 안내: 탭을 옮기지 않아도 목록에서 바로 (지금 중요도까지)
   let scoreHelpOpen = false;
   window.toggleScoreHelp = function(){ scoreHelpOpen = !scoreHelpOpen; render(false); };
-  window.goTab = function(k){ const t = document.querySelector('.tab[data-tab="' + k + '"]'); if(t) t.click(); };
+  // 아래 펼치는 칸 열고 이동 (bg = 동네 배경, score = 점수 기준)
+  window.goTab = function(k){
+    const d = document.getElementById("sec-" + k);
+    if(!d) return;
+    if(k === "bg") renderBg(guEl.value);
+    d.open = true;
+    d.scrollIntoView({ block: "start" });
+  };
   function scoreHelpHTML(w){
     const ws = DIMS.map(([nm, i]) => [nm, w[i]]).filter(d => d[1] > 0).sort((a, b) => b[1] - a[1]);
     return '<div class="shbox"><b>종합 점수는 이렇게 매겨요</b><ul>' +
@@ -2746,21 +2754,8 @@
   }
   window.renderBg = renderBg;
 
-  // 탭 전환
-  document.querySelectorAll(".tab").forEach(btn => {
-    btn.addEventListener("click", () => {
-      document.querySelectorAll(".tab").forEach(b => b.classList.remove("on"));
-      btn.classList.add("on");
-      ["rec","bg","score"].forEach(k => {
-        document.getElementById("panel-" + k).style.display = (k === btn.dataset.tab) ? "block" : "none";
-      });
-      if(btn.dataset.tab === "rec" && map) setTimeout(() => map.relayout(), 60);
-      if(btn.dataset.tab === "bg") renderBg(guEl.value);           // 추천에서 고른 구를 먼저 보여 줌
-      const tabsEl = document.querySelector(".tabs");              // 탭을 바꾸면 내용 맨 위부터
-      if(tabsEl && tabsEl.getBoundingClientRect().top < 0) tabsEl.scrollIntoView({ block: "start" });
-      updateGoRes();
-    });
-  });
+  // 동네 배경 칸을 열면 고른 구로 다시 그림
+  document.getElementById("sec-bg").addEventListener("toggle", e => { if(e.target.open) renderBg(); });
 
   (function(){                        // 담긴 지역·단지 수 (지역이 늘면 저절로 바뀜)
     const el = document.getElementById("dataline");
