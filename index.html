@@ -300,7 +300,8 @@
   .cmodal .wishnote{margin:8px 0 12px}
   .cmodal .pickbtn{width:24px;height:24px}
   body.modalopen{overflow:hidden}
-  .cmodal .cmpbox{overflow-x:auto}
+  .cmodal .cwhy[data-tip]:hover::after,.cmodal .cwhy[data-tip]:focus::after{position:fixed;left:50%;right:auto;top:auto;bottom:24px;
+    transform:translateX(-50%);width:min(440px, 92vw);max-width:none;z-index:2100}
   @media (max-width:900px){
     .cmodal .wishlist .wd{display:none}            /* 이름이 보이게 동·연식은 숨김 */
     .cmodal .wishlist .wp{width:auto}
@@ -335,6 +336,12 @@
   .doc .tl3 b{display:inline;margin:0;font-size:inherit}
   /* 동네 배경 · 점수 기준 (간결) */
   .bgsec{margin-bottom:24px}
+  .gdiv{font-size:12.5px;color:var(--muted);margin:16px 2px 8px;padding-top:10px;border-top:1px dashed var(--border)}
+  .sharebox{font-size:12.5px;color:var(--muted);margin:0 0 8px}
+  .sharebox input{display:block;width:100%;margin-top:4px;font-size:12px;padding:6px 8px;border:1px solid var(--border);border-radius:6px;background:var(--card);color:var(--text)}
+  .cmodal .wishlist li{gap:10px;padding:8px 4px}
+  .cmodal .pickbtn{width:30px;height:30px;font-size:14px}
+  .cmodal .delbtn{padding:6px 10px;font-size:16px}
   .moreres{display:block;width:100%;margin:4px 0 12px;padding:11px;font-size:14px;font-weight:600;border-radius:12px;
     border:1px solid var(--accent);background:var(--card);color:var(--accent);cursor:pointer}
   .moreres span{font-weight:400;color:var(--muted);font-size:12.5px}
@@ -477,6 +484,7 @@
     .howto{display:none}
     .tips .tip:nth-child(n+2){display:none}
     .mdot em{font-size:11px}
+    #results{padding-bottom:90px}               /* 아래 찜 바에 마지막 카드가 가리지 않게 */
     /* ── 휴대폰 간단 화면: 고르기 → 순위 → 찜·비교만 (자세한 분석은 PC) ── */
     details.fold.more, .pchg{display:none}                         /* 더 자세한 조건 · 중요도 바꾸기 */
     .card details.fold{display:none}                              /* 상세의 접는 칸 6개 */
@@ -601,7 +609,7 @@
     </details>
   </div>
     <div class="qbox"><input id="q" type="search" placeholder="🔍 단지 이름으로 찾기" autocomplete="off"><div id="qres" class="qres"></div></div>
-    <div class="resbar"><p class="count" id="count"></p><button class="sharebtn mobonly" onclick="toggleMapView()">🗺 지도 보기</button><button class="sharebtn" id="shareBtn" onclick="shareLink()">🔗 이 조건 링크 복사</button></div>
+    <div class="resbar"><p class="count" id="count"></p><button class="sharebtn mobonly" onclick="toggleMapView()">🗺 지도 보기</button><button class="sharebtn mobonly" onclick="document.getElementById('reset').click()">↺ 처음부터</button><button class="sharebtn" id="shareBtn" onclick="shareLink()">🔗 이 조건 링크 복사</button></div>
   <div id="areaBrief"></div>
   <div id="tips" class="tips"></div>
     <div id="results"></div>
@@ -651,8 +659,8 @@
         <tr><th>공원</th><td>근린공원(산책·운동할 만한 공원) · 자녀 가정은 집 앞 작은 공원도 30% 반영</td><td>걸어서 5분 → 20분</td></tr>
         <tr><th>생활편의</th><td>음식점·카페 수(1km) + 대형마트·슈퍼 거리</td><td>수는 많을수록 · 마트 5분 → 20분</td></tr>
         <tr><th>여가</th><td>1인·신혼 문화·헬스 시설 수 + 문화센터 · 영유아·초등 도서관 + 문화센터 · 중·고 도서관 · 시니어 복지관 + 문화센터</td><td>수는 많을수록 · 거리 5분 → 20분</td></tr>
-        <tr><th>단지</th><td>연식 + 세대수 (차 있으면 주차)</td><td>신축 → 30년 · 세대수 많을수록 (정보 없으면 0점)</td></tr>
-        <tr><th>시장평가</th><td>같은 시·구 안 평당가 순위</td><td>비쌀수록 높음 · 기본 중요도 3</td></tr>
+        <tr><th>연식·규모</th><td>연식 + 세대수 (차 있으면 주차)</td><td>신축 → 30년 · 세대수 많을수록 (정보 없으면 0점)</td></tr>
+        <tr><th>시세 수준</th><td>같은 시·구 안 평당가 순위</td><td>비쌀수록 높음 · 기본 중요도 3</td></tr>
       </tbody></table>
       <p class="note" style="margin-top:4px;padding-top:0;border:none">'많을수록'은 앱에 담긴 전체 단지 중 순위예요. 거리는 걷는 사람 기준이라 아이·어르신은 같은 시간이라도 거리가 짧아요.</p>
       <b>카드에 붙는 표시</b>
@@ -671,9 +679,9 @@
 </div>
 
 <div id="webLoading" style="position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:3000;background:#2b2a28;color:#fff;font-size:13px;padding:9px 16px;border-radius:999px;box-shadow:0 3px 12px rgba(0,0,0,.25)">자료를 불러오는 중이에요 (처음 한 번 몇 초 걸려요)</div>
-<script src="data/apt_data_1.js?v=202611091145"></script>
-<script src="data/apt_data_2.js?v=202611091145"></script>
-<script src="data/apt_data_3.js?v=202611091145"></script>
+<script src="data/apt_data_1.js?v=202611091246"></script>
+<script src="data/apt_data_2.js?v=202611091246"></script>
+<script src="data/apt_data_3.js?v=202611091246"></script>
 <script>
   // 단지 데이터 (점수+가격+이름+주소+세대수+좌표 병합)
   //  s=[역세권,교육,공원,상권,병원,즐길거리] 점수, lat/lng=좌표
@@ -697,7 +705,7 @@
   // ── 상황별 추천 (설계안 v0.4 · B7) — AI 생성 ─────────────────────────
   // 축 8개. 같은 축도 상황마다 재는 지표가 다르다 (PERSONAS의 comp).
   // 계산 결과는 단지마다 x._ax(축 점수 8개, 자료 없으면 undefined)와 x._gate(필수조건 판정)에 둔다.
-  const DIMS = [["교통",0],["교육",1],["보육",2],["의료",3],["공원",4],["생활편의",5],["여가",6],["단지",7],["시장평가",8]];
+  const DIMS = [["교통",0],["교육",1],["보육",2],["의료",3],["공원",4],["생활편의",5],["여가",6],["연식·규모",7],["시세 수준",8]];
   const DEFAULT_W = 5, TOP_N = 40, NOW_YEAR = 2026;
   let topN = TOP_N, topSig = '';    // 목록에 보이는 개수: '더 보기'로 40곳씩 늘리고, 조건이 바뀌면 처음으로
   // 걸음 속도(m/분)·우회계수 [확정 D2]. 직선거리 = 걷는 분 × 속도 ÷ 1.4
@@ -926,7 +934,7 @@
     const out = [], has = id => sel.includes(id), p = x._p;
     const ax = (i, txt) => { if(w[i] >= 7 && x._ax[i] !== undefined && x._ax[i] < 40) out.push(txt); };
     ax(0, '교통 약함 · 지하철역 ' + (x.rd == null ? '2km 안에 없음' : mTxt(x.rd, 'A')));
-    ax(1, '교육 약함 · ' + (has('teen') && !has('elem') ? '입시학원 ' + x.ec + '곳' : '배정 초등학교 ' + mTxt(VAL.e1(x), 'C')));
+    ax(1, '교육 약함 · ' + (has('teen') && !has('elem') ? '입시학원 ' + x.ec + '곳' : '배정 초등학교 ' + distOrNone(VAL.e1(x), 'C')));
     ax(2, '보육 약함 · 어린이집 ' + distOrNone(VAL.care(x), 'C'));
     ax(3, '의료 약함 · ' + (has('senior') ? '내과 ' + distOrNone(VAL.im(x), 'S')
                          : has('baby') ? '소아과 ' + distOrNone(VAL.ped(x), 'C')
@@ -934,7 +942,7 @@
     ax(4, '공원 약함 · 공원 ' + (x.pd == null ? '2km 안에 없음' : x.pd.toLocaleString() + 'm'));
     ax(5, '생활편의 약함 · 음식점·카페 ' + (x.fc + x.cc) + '곳');
     ax(6, '여가 약함');
-    ax(7, '단지 약함 · ' + (x.y ? x.y + '년 준공' : '준공년도 미상') + (x.sed != null ? ' · ' + x.sed.toLocaleString() + '세대' : ''));
+    ax(7, '연식·규모 약함 · ' + (x.y ? x.y + '년 준공' : '준공년도 미상') + (x.sed != null ? ' · ' + x.sed.toLocaleString() + '세대' : ''));
     if(has('solo') || has('newlywed')){
       const mt = VAL.mt(x);
       if(mt === null || (mt !== undefined && mt > 1000)) out.push('가까운 대형마트·슈퍼가 없어요');
@@ -1041,7 +1049,7 @@
   const BYID = new Map(DATA.map(x => [uid(x), x]));
   // 찜은 새로고침해도 남도록 저장 시도 (환경에 따라 막히면 조용히 무시)
   function wishSave(){
-    try { localStorage.setItem("wish", JSON.stringify(wish)); } catch(e){}
+    try { localStorage.setItem("wish", JSON.stringify(wish)); localStorage.setItem("cmpSel", JSON.stringify(cmpSel)); } catch(e){}
   }
   function wishLoad(){
     try {
@@ -1049,6 +1057,8 @@
       // 예전 저장분(이름만)은 이름이 하나뿐인 단지만 살리고, 같은 이름이 여러 곳이면 버린다
       if(Array.isArray(v)) wish = v.map(k => BYID.has(k) ? k : (m => m.length === 1 ? uid(m[0]) : null)(DATA.filter(d => d.n === k)))
         .filter((k, i, a) => k && a.indexOf(k) === i);
+      const c = JSON.parse(localStorage.getItem("cmpSel"));   // 비교로 고른 단지 (찜 안에서, 3곳까지)
+      if(Array.isArray(c)) cmpSel = c.filter(k => wish.includes(k)).slice(0, CMP_MAX);
     } catch(e){}
   }
   let expanded = -1;
@@ -1123,6 +1133,7 @@
   // 지도 이동 (kind 0=구 단위, 1=동 단위)
   function moveMap(c, zoomIn){
     if(!map) return;
+    mapTouched = false;                  // 프로그램이 옮기는 것: 남아 있던 사용자 조작 표시는 지움
     map.setLevel(c ? (zoomIn ? 5 : 7) : 8);
     map.setCenter(new kakao.maps.LatLng(c ? c[0] : 37.515, c ? c[1] : 126.79));
   }
@@ -1154,14 +1165,16 @@
       gus.map(g => '<option value="' + g + '">' + g.slice(c.length + 1) + '</option>').join('');
     guEl.disabled = !gus.length;
   }
+  // 동은 구(또는 구가 없는 시) 하나를 골랐을 때만: 신사동처럼 같은 이름 동이 다른 구에도 있어 섞이므로
   function buildDong(){
     const gu = guEl.value;
-    const pool = DATA.filter(x => inRegion(x, gu));
-    const ds = [...new Set(pool.map(x => x.d))].sort();
+    const one = DATA.some(x => x.g === gu);
+    const ds = one ? [...new Set(DATA.filter(x => x.g === gu).map(x => x.d))].sort() : [];
     const cur = dongEl.value;
-    dongEl.innerHTML = '<option value="">전체</option>' +
+    dongEl.innerHTML = '<option value="">' + (one ? '전체' : '구를 먼저 고르세요') + '</option>' +
       ds.map(d => '<option value="' + d + '">' + d + '</option>').join('');
-    if(ds.includes(cur)) dongEl.value = cur;   // 가능하면 기존 선택 유지
+    dongEl.disabled = !one;
+    dongEl.value = ds.includes(cur) ? cur : '';   // 가능하면 기존 선택 유지
   }
 
   // 상황 칩 · 추가 조건 칩 그리기
@@ -1382,8 +1395,8 @@
     if(rank === 0 && x._gate === "pass") out.push('<span class="badge top">가장 추천</span>');
     if(x._gate === "unknown") out.push('<span class="badge warn">확인 필요</span>');
     if(x._gate === "fail") out.push('<span class="badge bad">조건 안 맞음</span>');
-    if(x._stable >= 0.7) out.push('<span class="badge good">안정 추천</span>');
-    if(x._val === "cheap") out.push('<span class="badge">점수 대비 저렴</span>');
+    if(x._stable >= 0.7) out.push('<span class="badge good" title="중요도를 이리저리 바꿔도 계속 10위 안에 드는 곳">안정 추천</span>');
+    if(x._val === "cheap") out.push('<span class="badge" title="같은 지역에서 점수가 비슷한 단지들보다 값이 많이 싼 곳">점수 대비 저렴</span>');
     const cand = DIMS.map(([nm, i]) => ({ i, v: x._ax[i], w: w[i] }))
       .filter(c => c.w > 0 && c.v >= 75)
       .sort((a, b) => (b.v * b.w) - (a.v * a.w));
@@ -1541,7 +1554,7 @@
     box.innerHTML =
       '<button class="pclose" title="닫기">&times;</button>' +
       '<div class="plabel" style="color:' + color + '">' + label + '</div>' +
-      '<div class="pname">' + nm + '</div>' +
+      '<div class="pname">' + esc(nm) + '</div>' +
       (cat ? '<div class="pcat">' + cat + '</div>' : '') +
       (pid ? '<a class="plink" href="https://place.map.kakao.com/' + pid + '" target="_blank" rel="noopener">카카오맵에서 보기 →</a>' : '');
     box.querySelector(".pclose").addEventListener("click", (e) => { e.stopPropagation(); closePlaceInfo(); });
@@ -1577,6 +1590,13 @@
     overlays = [];
     closePlaceInfo();
   }
+  // 지금 지도에 보이는 범위(위도·경도 폭). 이름표 겹침 판단용 (카카오·오픈스트리트맵 공통)
+  function viewSpan(){
+    try {
+      const b = map.getBounds(), sw = b.getSouthWest(), ne = b.getNorthEast();
+      return sw.getLat ? [ne.getLat() - sw.getLat(), ne.getLng() - sw.getLng()] : [ne.lat - sw.lat, ne.lng - sw.lng];
+    } catch(e){ return [0, 0]; }
+  }
   function updateMap(){
     if(!map) return;
     clearOverlays();
@@ -1588,6 +1608,8 @@
     // === 상세 모드: 선택한 단지 + 주변 시설 ===
     if(expanded >= 0 && shownList[expanded]){
       const x = shownList[expanded].x;
+      const msEl = document.getElementById("mapSum");   // 휴대폰 지도 위: 지금 보는 단지
+      if(msEl) msEl.innerHTML = '<b>' + esc(x.n) + '</b> 주변 시설 <span>· 🚇 역 🏫 학교 🍴 음식점 🏥 병원 🌳 공원</span>';
       if(lf){                                  // 범례: 아이콘 + 1km 안 개수 (병원·음식점·카페)
         const n = v => (v == null ? "" : " " + v.toLocaleString() + "곳");
         lf.innerHTML = '<span class="lg">🚇 지하철</span><span class="lg">🏫 학교</span>' +
@@ -1616,12 +1638,16 @@
     // === 전체 보기: 조건에 맞는 단지들을 점으로 ===
     const bounds = new kakao.maps.LatLngBounds();
     let cnt = 0;
+    const span = viewSpan(), labeled = [];       // 상위 5개 이름표 중 앞 순위와 겹치는 것은 점만
     shownList.forEach((r, i) => {
       const x = r.x;
       if(x.lat == null) return;
+      const rk = r.pin ? '🔍 ' : (r.rk != null ? r.rk : i + 1) + '위 ';
       makeDot(x.lat, x.lng, scoreColor(r.t), 12,
-        (i + 1) + "위 · " + x.n + " · 종합 " + s10(r.t), i);
-      if(i < 5) makeLabel(x.lat, x.lng, (i + 1) + "위 " + x.n, false, i);   // 상위 5개만 이름 표시(겹침 방지)
+        rk + '· ' + x.n + " · 종합 " + s10(r.t), i);
+      if(i < 5 && !labeled.some(o => Math.abs(o[0] - x.lat) < span[0] * 0.07 && Math.abs(o[1] - x.lng) < span[1] * 0.45)){
+        makeLabel(x.lat, x.lng, rk + x.n, false, i); labeled.push([x.lat, x.lng]);
+      }
       bounds.extend(new kakao.maps.LatLng(x.lat, x.lng));
       cnt++;
     });
@@ -1636,7 +1662,6 @@
     else { wish.push(name); if(cmpSel.length < CMP_MAX) cmpSel.push(name); }
     wishSave(); render(false);
   };
-  window.wishPanel = function(){ wishOpen = !wishOpen; render(false); };
   window.wishClear = function(){ wish = []; cmpSel = []; wishSave(); render(false); };
   // 찜 목록에서 비교 대상 고르기 (최대 3개)
   window.cmpPick = function(name){
@@ -1644,27 +1669,14 @@
     if(k >= 0) cmpSel.splice(k, 1);
     else if(cmpSel.length < CMP_MAX) cmpSel.push(name);
     else { alert("비교는 최대 " + CMP_MAX + "개까지예요."); return; }
-    render(false);
+    wishSave(); render(false);
   };
 
-  // 카드에서 바로 비교 담기 (찜 없이). 3개가 차면 가장 먼저 담은 것을 빼고 새로 담는다
-  window.cmpQuick = function(name, ev){
-    if(ev) ev.stopPropagation();
-    const k = cmpSel.indexOf(name);
-    if(k >= 0) cmpSel.splice(k, 1);
-    else { if(cmpSel.length >= CMP_MAX) cmpSel.shift(); cmpSel.push(name); }
-    render(false);
-  };
-  window.cmpClear = function(){ cmpSel = []; render(false); };
-  window.cmpShow = function(){
-    const b = document.querySelector(".cmpbox");
-    if(b) b.scrollIntoView({ behavior: "smooth", block: "start" });
-  };
   // 화면 아래 비교 바: 담은 단지와 '비교 보기'
   function trayHTML(){
     if(!wish.length || cmpOpen) return '';
     return '<span class="ct">♥ 찜 ' + wish.length + '곳</span>' +
-      '<span class="cn">' + wish.map(k => (BYID.get(k) || { n: '' }).n).map(n => n.length > 12 ? n.slice(0, 12) + '…' : n).join(' · ') + '</span>' +
+      '<span class="cn">' + wish.map(k => (BYID.get(k) || { n: '' }).n).map(n => esc(n.length > 12 ? n.slice(0, 12) + '…' : n)).join(' · ') + '</span>' +
       '<button onclick="openCmp()">' + (wish.length >= 2 ? '비교 보기' : '찜 보기') + '</button>';
   }
   // 찜·비교 팝업: 찜한 단지 목록(✓ = 비교할 3곳) + 비교 표. 목록 위로 오르내리지 않게 팝업으로
@@ -1684,7 +1696,7 @@
       const on = cmpSel.includes(n), q = JSON.stringify(n).replace(/"/g, "&quot;");
       return '<li' + (on ? ' class="on"' : '') + '>' +
         '<button class="pickbtn" onclick="cmpPick(' + q + ')" title="비교에 넣기/빼기">' + (on ? '✓' : '') + '</button>' +
-        '<span class="wn">' + x.n + '</span>' +
+        '<span class="wn">' + esc(x.n) + '</span>' +
         '<span class="wd">' + x.d + (x.y ? ' · ' + x.y + '년' : '') + '</span>' +
         '<span class="wp">' + won(minPrice(x)) + '</span>' +
         '<span class="ws">' + s10(totalScore(x, w)) + '</span>' +
@@ -1700,6 +1712,7 @@
     if(expanded === i){                     // 같은 카드 다시 누르면 닫기
       expanded = -1;
       render(false);
+      mapTouched = false;
       if(savedView && map){                 // 상세 보기 전 지도 위치로 복귀
         map.setLevel(savedView.l);
         map.setCenter(savedView.c);
@@ -1769,7 +1782,7 @@
       const py = x.py.map(p => p[1]);
       const lo = Math.round(Math.min(...py)), hi = Math.round(Math.max(...py));
       out.push((lo === hi ? lo + '㎡(약 ' + pyg(lo) + '평형)' : lo + '~' + hi + '㎡(약 ' + pyg(lo) + '~' + pyg(hi) + '평형)') +
-        '이 거래됐고, 최저 ' + won(x.minP) + '부터예요.');
+        '이 거래됐고, ' + (dealMode === "jeonse" && x.minJ != null ? '전세는 ' + won(x.minJ) : '최근 거래가는 ' + won(x.minP)) + '부터예요.');
     }
     return out.join(' ');
   }
@@ -1781,8 +1794,8 @@
   // 월별 실거래 + 거래 내역. 평형을 고르면 그 평형만 본다.
   function monthlyHTML(x){
     if(!x.dl || !x.dl.length) return '';
-    if(dealPyOwner !== x.n){              // 단지가 바뀌면 조건에 맞는 평형(가장 싼 것)을 먼저 보여 줌
-      dealPyOwner = x.n; dealPy = null;
+    if(dealPyOwner !== uid(x)){              // 단지가 바뀌면 조건에 맞는 평형(가장 싼 것)을 먼저 보여 줌
+      dealPyOwner = uid(x); dealPy = null;
       const m = matchPys(x, getFilters()).sort((a, b) => a[2] - b[2])[0];
       const c = m ? [...new Set(x.dl.map(d => d[1]))].find(v => Math.abs(v - m[0]) <= 0.5) : undefined;
       if(c !== undefined) dealPy = c;
@@ -1852,23 +1865,21 @@
   // 왜 이 순위인지: 중요하게 본 항목에서 이 단지가 상위 몇 %인지
   function whyHTML(x){
     const w = getWeights();
+    // 중요도 높은 항목 중 이 단지가 전체 단지에서 상위 30% 안에 드는 것만 (약한 항목은 '확인할 점'에서)
+    const rankOf = d => {
+      const v = x._ax[d.i];
+      if(v === undefined) return 101;
+      const has = DATA.filter(o => o._ax[d.i] !== undefined);
+      return Math.max(1, Math.ceil((has.filter(o => o._ax[d.i] > v + 0.05).length + 1) / has.length * 100));
+    };
     const picked = DIMS.map(([nm, i]) => ({ nm, i, w: w[i] }))
       .filter(d => d.w > 0).sort((a, b) => b.w - a.w).slice(0, 4)
-      .filter(d => x._ax[d.i] !== undefined && x._ax[d.i] >= 50).slice(0, 2);   // 약한 항목은 '확인할 점'에서만
+      .map(d => Object.assign(d, { pr: rankOf(d) })).filter(d => d.pr <= 30).slice(0, 2);
     if(!picked.length && !gatesNow().length) return '';
-    const lines = picked.map(d => {
-      const v = x._ax[d.i];
-      if(v === undefined) return d.nm + ' 자료 준비 중';
-      const has = DATA.filter(o => o._ax[d.i] !== undefined);
-      // 나보다 높은 단지 수로 순위를 매기고, 동점이 많으면 함께 알려 준다 (만점 단지가 많은 축 대비)
-      const greater = has.filter(o => o._ax[d.i] > v + 0.05).length;
-      const same = has.filter(o => Math.abs(o._ax[d.i] - v) <= 0.05).length;
-      const pctRank = Math.max(1, Math.ceil((greater + 1) / has.length * 100));
-      return d.nm + ' ' + s10(v) + ' (상위 ' + pctRank + '%' + (same >= has.length * 0.05 ? ', 동점 ' + same + '개' : '') + ')';
-    }).join(' · ');
+    const lines = picked.map(d => d.nm + ' ' + s10(x._ax[d.i]) + ' (상위 ' + d.pr + '%)').join(' · ');
     const gline = !gatesNow().length ? '' : ' · 꼭 필요한 조건 ' +
       (x._gate === "pass" ? '맞음' : x._gate === "unknown" ? '확인 필요 (' + x._gateUnknown.join('·') + ' 자료 없음)' : '안 맞음 (' + x._gateFail.join('·') + ')');
-    return '<div class="why"><b>추천 이유</b> ' + (lines || '중요하게 본 항목 고른 편') + gline + '</div>';
+    return '<div class="why"><b>추천 이유</b> ' + (lines || '꼭 필요한 조건 기준으로 골랐어요') + gline + '</div>';
   }
 
   // 접어 둔 섹션의 열림 상태를 기억해, 평형 선택 등으로 다시 그려도 열어 둔 섹션이 닫히지 않게 한다
@@ -2051,7 +2062,7 @@
     if(xs.length < 2) return '';
     const tots = xs.map(x => totalScore(x, w));
     const best = tots.indexOf(Math.max(...tots));
-    const th = xs.map((x, i) => '<th' + (i === best ? ' class="win"' : '') + '>' + x.n + '</th>').join('');
+    const th = xs.map((x, i) => '<th' + (i === best ? ' class="win"' : '') + '>' + esc(x.n) + '</th>').join('');
     const row = (label, fn, hi) => {
       const vals = xs.map(fn);
       let bestI = -1;
@@ -2079,7 +2090,7 @@
       const bx = xs[best];
       const others = xs.filter((_, i) => i !== best);
       const lead = others.every(o => (bx._ax[top.i] || 0) >= (o._ax[top.i] || 0));
-      verdict = '<div class="verdict"><b>' + bx.n + '</b>가 지금 기준으로 앞서요'
+      verdict = '<div class="verdict"><b>' + esc(bx.n) + '</b>가 지금 기준으로 앞서요'
         + (lead ? ' — 가장 중요하게 보신 <b>' + top.nm + '</b>에서도 우위예요.' : '.') + '</div>';
     }
     return '<div class="cmpbox">' +
@@ -2142,8 +2153,14 @@
     const url = location.href.split("#")[0] + "#" + stateHash();
     const b = document.getElementById("shareBtn");
     const done = () => { if(b){ b.textContent = "링크 복사됨 ✓"; setTimeout(() => { b.textContent = "🔗 이 조건 링크 복사"; }, 1800); } };
-    if(navigator.clipboard) navigator.clipboard.writeText(url).then(done, () => prompt("아래 링크를 복사하세요", url));
-    else prompt("아래 링크를 복사하세요", url);
+    const fallback = () => {                      // 클립보드가 막히면 링크를 화면에 띄워 직접 복사
+      let box = document.getElementById("shareBox");
+      if(!box){ box = document.createElement("div"); box.id = "shareBox"; box.className = "sharebox"; document.querySelector(".resbar").after(box); }
+      box.innerHTML = '아래 링크를 길게 눌러 복사하세요<input readonly value="' + esc(url) + '" onclick="this.select()">';
+      const i = box.querySelector("input"); i.focus(); i.select();
+    };
+    if(navigator.clipboard) navigator.clipboard.writeText(url).then(done, fallback);
+    else fallback();
   };
 
   // 조건에 맞는 평형의 시세와 최근 실거래 (접지 않고 바로 보여 줌)
@@ -2390,7 +2407,7 @@
       [L('재건축'), ...xs.map(x => T(x.rb ? x.rb[0] : (x.y && NOW_YEAR - parseInt(x.y) >= 30 ? '연한 지남 (추진 정보 없음)' : '해당 없음')))],
       [L('확인할 점'), ...xs.map(x => T(warnings(x, w).join('\n') || '-'))],
       blank(),
-      [{ v: '점수는 0~10점 · 거리·연식·주차는 정해진 기준으로, 학원·음식점·세대수 같은 개수는 앱에 담긴 전체 단지 중 순위로, 시장평가는 같은 시·구 안 순위로 매겨요 (초록 = 이 표에서 가장 높음). 출처: 국토교통부 실거래가 · 카카오맵 · 학구도 · 공동주택 정보', s: 7 }],
+      [{ v: '점수는 0~10점 · 거리·연식·주차는 정해진 기준으로, 학원·음식점·세대수 같은 개수는 앱에 담긴 전체 단지 중 순위로, 시세 수준은 같은 시·구 안 순위로 매겨요 (초록 = 이 표에서 가장 높음). 출처: 국토교통부 실거래가 · 카카오맵 · 학구도 · 공동주택 정보', s: 7 }],
     ];
     const lc = xlCol(xs.length), nr = rows.length;
     const sheet = xlSheet(rows, [24, ...xs.map(() => 32)], ['A1:' + lc + '1', 'A2:' + lc + '2', 'A' + nr + ':' + lc + nr], 4);
@@ -2458,7 +2475,7 @@
       '<span class="sortnote"><b>종합점수 높은 순</b> · 교통·교육·보육·의료·생활편의 등 9개 항목 점수를 내 상황의 중요도로 평균했어요 ' +
       '<button class="linkbtn" onclick="toggleScoreHelp()">' + (scoreHelpOpen ? '닫기' : '자세히') + '</button></span>' +
       '<button class="wishbtn' + (wish.length ? ' has' : '') + '" onclick="openCmp()">' +
-      '♥ 찜 ' + wish.length + '개' + (wish.length >= 2 ? ' · 비교' : wish.length ? ' 보기' : '') + '</button>' +
+      '♥ 찜 ' + wish.length + '곳' + (wish.length >= 2 ? ' · 비교' : wish.length ? ' 보기' : '') + '</button>' +
       '</div>';
     const help = scoreHelpOpen ? scoreHelpHTML(w) : '';
     return bar + help;                          // 찜 목록·비교는 팝업(modalHTML)에서
@@ -2481,9 +2498,9 @@
     const sedMeta = x.sed != null ? (' · ' + x.sed.toLocaleString() + '세대') : '';
     return '<div class="card">' +
       '<div class="row' + (open ? ' open' : '') + '" onclick="toggle(' + i + ')">' +
-        '<div class="rank">' + (pin ? '🔍' : rk) + '</div>' +
+        '<div class="rank">' + (pin ? '🔍' : rk == null ? '·' : rk) + '</div>' +
         '<div class="info">' +
-          '<div class="nm">' + x.n + (x.al ? ' <span class="al">' + esc(x.al) + '</span>' : '') + ' <span class="chev">' + (open ? '▲' : '▼') + '</span></div>' +
+          '<div class="nm">' + esc(x.n) + (x.al ? ' <span class="al">' + esc(x.al) + '</span>' : '') + ' <span class="chev">' + (open ? '▲' : '▼') + '</span></div>' +
           '<div class="meta">' + x.d + (x.y ? ' · ' + x.y + '년' : '') + sedMeta + '</div>' +
           '<div class="price">' + priceTxt + '</div>' +
           badges(x, w, rk ? rk - 1 : -1) + (pin ? pinNote(x, f, rk) : '') +   // 약한 점(주의)은 카드에서 빼고 상세 '확인할 점'에만
@@ -2560,7 +2577,7 @@
     if(dong) conds.push(dong);
     if(dealMode === "jeonse") conds.unshift("전세");
     const who = sel.length ? personas().map(p => p.name).join('·') + ' · ' : '';
-    let label = who + (conds.length ? conds.join(' · ') + ' · ' : '') + pool.length + '개 단지' +
+    let label = who + (conds.length ? conds.join(' · ') + ' · ' : '') + pool.length.toLocaleString() + '개 단지' +
       (pool.length > topN ? ' 중 상위 ' + topN + '곳' : '');
     const nAll = scoped() ? countWith(f, dong, gu, true) : pool.length;
     let visG = '';                     // 지도가 정한 동네: 보이는 시·구 + 단지가 많은 동 2개
@@ -2578,16 +2595,12 @@
     // 휴대폰 지도 화면 위 요약: 상황 · 예산·평형 · 지역 · 개수
     resN = pool.length; setTimeout(updateGoRes, 0);
     const mapSumEl = document.getElementById("mapSum");
-    const detX = expanded >= 0 && shownList[expanded] ? shownList[expanded].x : null;
-    if(mapSumEl && detX) mapSumEl.innerHTML = '<b>' + esc(detX.n) + '</b> 주변 시설 <span>· 🚇 역 🏫 학교 🍴 음식점 🏥 병원 🌳 공원</span>';
-    else if(mapSumEl) mapSumEl.innerHTML = (sel.length ? '<b>' + esc(personas().map(p => p.name).join('·')) + '</b> · ' : '') +
+    if(mapSumEl) mapSumEl.innerHTML = (sel.length ? '<b>' + esc(personas().map(p => p.name).join('·')) + '</b> · ' : '') +
       esc(conds.filter(c => c !== gu && c !== dong).join(' · ') || '조건 없음') + ' · ' +
       esc(scoped() ? (visG || '지도에 보이는 곳') : (dong || gu || '모든 지역')) +
       ' <span>· ' + pool.length + '곳' + (pool.length > topN ? ' (상위 ' + topN + '곳 표시)' : '') + '</span>';
     const panelEl = document.querySelector(".panel");
     if(!ready(f)) panelEl.classList.remove("collapsed");
-    const go = document.getElementById("goBtn");
-    if(go){ go.classList.toggle("on", ready(f)); go.textContent = '결과 ' + pool.length + '곳 보기 ↓'; }
     const sh = document.getElementById("scopeHint");
     if(sh) sh.textContent = visG ? '🗺 지금은 지도에 보이는 곳 기준이에요 (' + visG + '). 시·구를 고르면 그 지역 전체로 바뀌어요.' : '';
     document.getElementById("psum").innerHTML = '<div class="pl"><span>' + esc(who + conds.join(' · ') + (visG ? ' · 지도: ' + visG : '')) + '</span>' +
@@ -2620,15 +2633,22 @@
         ? '지도에 보이는 곳은 아직 자료가 없는 지역이에요.<br><span class="mut">지금 담긴 지역: ' + [...new Set(DATA.map(x => x.g))].join(' · ') + '</span>'
         : scoped()
           ? '지도에 보이는 단지 ' + inView + '곳 중 이 조건에 맞는 곳이 없어요.' + (loose ? '<br>예산·평형 조건을 빼면 ' + loose + '곳이 있어요.' : '')
-          : '조건에 맞는 단지가 없어요.<br>위 안내처럼 예산·평형을 넓혀 보세요.';
+          : '조건에 맞는 단지가 없어요.<br>' + (dong ? '동 선택을 풀거나 ' : '') + '예산·평형을 넓혀 보세요.';
       resultsEl.innerHTML = wishHTML(w) + '<div class="empty">' + msg +
         (scoped() && nAll ? '<br><button class="reset" onclick="setScope(false)">조건에 맞는 전체 ' + nAll + '곳 보기</button>' : '') + '</div>';
       updateMap();
       return;
     }
     applyPin(ranked, w);
-    resultsEl.innerHTML = wishHTML(w) + shownList.map((r, i) => cardHTML(r.x, i, f, w, r.rk, r.pin)).join('') +
-      (ranked.length > topN ? '<button class="moreres" onclick="moreResults()">' + TOP_N + '곳 더 보기 <span>(' + topN + ' / ' + ranked.length + '곳)</span></button>' : '');
+    // 꼭 필요한 조건에 안 맞거나 확인이 필요한 단지는 구분선 아래에 순위 번호 없이
+    let divDone = false;
+    const offGate = r => gatesNow().length && !r.pin && r.x._gate && r.x._gate !== "pass";
+    resultsEl.innerHTML = wishHTML(w) + shownList.map((r, i) => {
+      const off = offGate(r);
+      const pre = off && !divDone ? (divDone = true, '<div class="gdiv">아래는 꼭 필요한 조건에 안 맞거나 자료가 없어 확인이 필요한 곳이에요 (순위 제외)</div>') : '';
+      return pre + cardHTML(r.x, i, f, w, off ? null : r.rk, r.pin);
+    }).join('') +
+      (ranked.length > topN ? '<button class="moreres" onclick="moreResults()">' + Math.min(TOP_N, ranked.length - topN) + '곳 더 보기 <span>(' + topN + ' / ' + ranked.length.toLocaleString() + '곳)</span></button>' : '');
     updateMap();
   }
 
@@ -2655,6 +2675,10 @@
   document.getElementById("chipDeal").addEventListener("click", e => {
     const b = e.target.closest(".chip");
     if(!b || b.disabled) return;
+    if(b.dataset.deal !== dealMode){             // 매매↔전세는 가격대가 달라 예산을 다시 고르게
+      CHIPS.budget.sel = -1;
+      ["budMin", "budMax"].forEach(id => { const el = document.getElementById(id); if(el) el.value = ""; });
+    }
     dealMode = b.dataset.deal; buildDeal();
     expanded = -1; render(false);
   });
