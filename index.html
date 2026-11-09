@@ -430,6 +430,7 @@
   /* v0.6.0: 목록 범위 · 휴대폰 지도 · 결과 바로 보기 · 3곳 요약 · 대출 계산 */
   .scope{font-size:12.5px;color:var(--muted);margin-left:4px}
   .mobonly,.mapclose{display:none}
+  .mobnote{display:none}
   /* 휴대폰: 조건을 고른 뒤 결과가 화면 아래에 있으면 띄우는 버튼 */
   .gores{display:none;position:fixed;left:50%;transform:translateX(-50%);bottom:16px;z-index:1100;font-size:14px;font-weight:600;
     padding:11px 20px;border-radius:999px;border:none;background:var(--accent);color:#fff;box-shadow:0 3px 12px rgba(0,0,0,.25);cursor:pointer}
@@ -476,10 +477,17 @@
     .howto{display:none}
     .tips .tip:nth-child(n+2){display:none}
     .mdot em{font-size:11px}
+    /* ── 휴대폰 간단 화면: 고르기 → 순위 → 찜·비교만 (자세한 분석은 PC) ── */
+    details.fold.more, .pchg{display:none}                         /* 더 자세한 조건 · 중요도 바꾸기 */
+    .card details.fold{display:none}                              /* 상세의 접는 칸 6개 */
+    #sec-bg, #sec-score{display:none !important}                  /* 동네 배경 · 점수 기준 칸 */
+    button[onclick^="goTab"]{display:none}                        /* 그 칸으로 가는 링크 */
+    .pconly, .cmpclear.xl{display:none}                           /* 엑셀 받기 */
+    .mobnote{display:block;font-size:12px;color:var(--muted);margin-top:10px;padding-top:8px;border-top:1px solid var(--border)}
     .linkbtn{padding:6px 2px}                 /* 누르는 칸 키우기 */
     .pchg,.cmpclear{padding:7px 12px}
     .links{flex-wrap:nowrap}
-    .links a{flex:1;text-align:center;padding:8px 4px}
+    .links a{flex:1;text-align:center;padding:8px 4px;font-size:12px;white-space:nowrap}
     /* 시·구·동은 한 줄 3칸, 평형 칩은 ㎡만, 가격 표 아래 설명은 숨김 */
     .ctrl-top{display:grid;grid-template-columns:repeat(3, minmax(0, 1fr));gap:6px}
     .ctrl-top select{width:100%;min-width:0;font-size:13px;padding:7px 6px}
@@ -663,9 +671,9 @@
 </div>
 
 <div id="webLoading" style="position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:3000;background:#2b2a28;color:#fff;font-size:13px;padding:9px 16px;border-radius:999px;box-shadow:0 3px 12px rgba(0,0,0,.25)">자료를 불러오는 중이에요 (처음 한 번 몇 초 걸려요)</div>
-<script src="data/apt_data_1.js?v=202611091136"></script>
-<script src="data/apt_data_2.js?v=202611091136"></script>
-<script src="data/apt_data_3.js?v=202611091136"></script>
+<script src="data/apt_data_1.js?v=202611091145"></script>
+<script src="data/apt_data_2.js?v=202611091145"></script>
+<script src="data/apt_data_3.js?v=202611091145"></script>
 <script>
   // 단지 데이터 (점수+가격+이름+주소+세대수+좌표 병합)
   //  s=[역세권,교육,공원,상권,병원,즐길거리] 점수, lat/lng=좌표
@@ -1683,7 +1691,7 @@
         '<button class="delbtn" onclick="wishToggle(' + q + ', event)" title="찜 빼기">✕</button></li>';
     }).join('');
     return '<div class="cmin">' + top + '<ul class="wishlist">' + rows + '</ul>' +
-      '<div class="wishnote">✓ 표시한 단지끼리 비교해요 (최대 ' + CMP_MAX + '곳) · <button class="linkbtn" onclick="wishExcel()">엑셀로 받기</button> · ' +
+      '<div class="wishnote">✓ 표시한 단지끼리 비교해요 (최대 ' + CMP_MAX + '곳)<span class="pconly"> · <button class="linkbtn" onclick="wishExcel()">엑셀로 받기</button></span> · ' +
       '<button class="linkbtn" onclick="wishClear()">전체 비우기</button></div>' +
       (cmpSel.length >= 2 ? compareHTML(w) : '<div class="wishnote">2곳 이상 ✓ 하면 비교 표가 나와요.</div>') + '</div>';
   }
@@ -1991,6 +1999,7 @@
         py + '</tbody></table>' + jeonseTab +
       monthlyHTML(x) + '</details>' + loanHTML(x, f) + tlFold + verifyHTML(x) +
       listingHTML(x) +
+      '<div class="mobnote">항목별 점수·주변 시설·시세 그래프·대출 계산 같은 자세한 분석은 PC에서 볼 수 있어요.</div>' +
     '</div>';
   }
 
