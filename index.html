@@ -157,11 +157,11 @@
   .cmptab tbody th{text-align:left;color:var(--muted);font-weight:500;white-space:nowrap}
   .cmptab .win{color:var(--accent);font-weight:700;background:var(--head)}
   /* 비교 표 점수 근거 말풍선 (마우스를 올리거나 눌러서) */
-  .why{position:relative;cursor:help;white-space:nowrap}
-  .why[data-tip]:hover::after,.why[data-tip]:focus::after{content:attr(data-tip);position:absolute;right:0;top:calc(100% + 6px);z-index:60;
-    width:max-content;max-width:340px;white-space:pre-line;text-align:left;background:#2b2a28;color:#fff;font-size:12px;font-weight:400;line-height:1.55;
+  .cwhy{position:relative;cursor:help;white-space:nowrap}
+  .cwhy[data-tip]:hover::after,.cwhy[data-tip]:focus::after{content:attr(data-tip);position:absolute;right:0;top:calc(100% + 6px);z-index:60;
+    width:max-content;max-width:min(340px, 82vw);white-space:pre-line;text-align:left;background:#2b2a28;color:#fff;font-size:12px;font-weight:400;line-height:1.55;
     padding:8px 11px;border-radius:8px;box-shadow:0 3px 12px rgba(0,0,0,.2);pointer-events:none}
-  @media (prefers-color-scheme: dark){ .why[data-tip]:hover::after,.why[data-tip]:focus::after{background:#e8e6e0;color:#191918} }
+  @media (prefers-color-scheme: dark){ .cwhy[data-tip]:hover::after,.cwhy[data-tip]:focus::after{background:#e8e6e0;color:#191918} }
   .verdict{margin-top:9px;font-size:13px;background:var(--head);border-radius:8px;padding:8px 11px}
   .row{background:var(--card);border:1px solid var(--border);border-radius:12px;
     padding:13px 15px;display:flex;align-items:center;gap:13px;cursor:pointer}
@@ -194,6 +194,10 @@
     background:rgba(255,255,255,.92);color:#1b2b45;border:1px solid rgba(0,0,0,.12);
     box-shadow:0 1px 4px rgba(0,0,0,.18)}
   .maplabel.sel{background:#2563eb;color:#fff;border-color:#2563eb}
+  .maplabel.go{cursor:pointer}
+  /* 지도 위 주변 시설 아이콘 (흰 동그라미 + 분류 색 테두리) */
+  .facicon{width:24px;height:24px;border-radius:50%;background:#fff;border:2px solid;display:flex;align-items:center;
+    justify-content:center;font-size:13px;line-height:1;box-shadow:0 1px 3px rgba(0,0,0,.35);cursor:pointer}
   /* 월별 실거래: 막대 = 거래건수(아래쪽), 꺾은선 = 시세(위쪽) */
   .mchart{position:relative;display:flex;align-items:flex-end;height:140px;padding:0 2px}
   .mbar{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%}
@@ -373,6 +377,12 @@
   /* v0.6.0: 목록 범위 · 휴대폰 지도 · 결과 바로 보기 · 3곳 요약 · 대출 계산 */
   .scope{font-size:12.5px;color:var(--muted);margin-left:4px}
   .mobonly,.mapclose{display:none}
+  /* 휴대폰 지도 화면 위 조건 요약 (2026-11-09) */
+  .mapbar{display:none;align-items:center;gap:8px;margin:0 0 8px}
+  .mapsum{flex:1;min-width:0;font-size:13px;line-height:1.4;color:var(--text);display:-webkit-box;-webkit-line-clamp:2;
+    -webkit-box-orient:vertical;overflow:hidden}
+  .mapsum b{color:var(--accent)}
+  .mapsum span{color:var(--muted)}
   .gobtn{display:none;width:100%;margin-top:12px;padding:11px;font-size:14.5px;font-weight:700;border:none;border-radius:10px;background:var(--accent);color:#fff;cursor:pointer}
   .gobtn.on{display:block}
   .psum{display:none}
@@ -393,6 +403,18 @@
     .col-right{display:none}
     body.mapopen .col-right{display:block;position:fixed;inset:0;z-index:1200;background:var(--bg);padding:12px 12px 0;overflow:auto}
     body.mapopen .col-right .mapbox{height:calc(100vh - 120px)}
+    body.mapopen .mapbar{display:flex}
+    body.mapopen .mapbar .mapclose{margin:0;flex:none}
+    /* 휴대폰 가독성 (2026-11-09 점검): 누르는 칸 36px 안팎, 글자 13px 이상 */
+    .resbar .count{flex:1 1 100%}
+    .chip{font-size:13px;padding:7px 12px}
+    .pychips .chip{font-size:12.5px;padding:5px 10px}
+    .sharebtn{font-size:13px;padding:7px 13px}
+    .cmpbtn{font-size:12.5px;padding:6px 11px}
+    details.fold > summary{font-size:14px;padding:9px 0}
+    .howto{display:none}
+    .tips .tip:nth-child(n+2){display:none}
+    .mdot em{font-size:11px}
     body.mapopen .mapclose{display:block;margin:0 0 8px auto;font-size:13px;padding:6px 12px;border:1px solid var(--border);border-radius:999px;background:var(--card);color:var(--text);cursor:pointer}
   }
   .wl b{color:var(--text);font-weight:600}
@@ -537,7 +559,7 @@
     </div>
 
     <div class="col-right">
-      <button class="mapclose" onclick="toggleMapView()">✕ 지도 닫기</button>
+      <div class="mapbar"><div class="mapsum" id="mapSum"></div><button class="mapclose" onclick="toggleMapView()">✕ 닫기</button></div>
       <div id="map" class="mapbox"></div>
       <div class="legend" id="legendScore">
         <span class="lg">종합점수</span>
@@ -546,11 +568,8 @@
       </div>
       <div class="legend" id="legendFac" style="display:none">
         <span class="lg"><span class="dot" style="background:#2563eb"></span>단지</span>
-        <span class="lg"><span class="dot" style="background:#0d9488"></span>지하철</span>
-        <span class="lg"><span class="dot" style="background:#9333ea"></span>학교</span>
-        <span class="lg"><span class="dot" style="background:#f97316"></span>상권</span>
-        <span class="lg"><span class="dot" style="background:#dc2626"></span>병원</span>
-        <span class="lg"><span class="dot" style="background:#65a30d"></span>공원</span>
+        <span class="lg">🚇 지하철</span><span class="lg">🏫 학교</span><span class="lg">🍴 음식점·카페</span>
+        <span class="lg">🏥 병원</span><span class="lg">🌳 공원</span>
       </div>
     </div>
   </div>
@@ -558,9 +577,9 @@
 </div>
 
 <div id="webLoading" style="position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:3000;background:#2b2a28;color:#fff;font-size:13px;padding:9px 16px;border-radius:999px;box-shadow:0 3px 12px rgba(0,0,0,.25)">자료를 불러오는 중이에요 (처음 한 번 몇 초 걸려요)</div>
-<script src="data/apt_data_1.js?v=202611090956"></script>
-<script src="data/apt_data_2.js?v=202611090956"></script>
-<script src="data/apt_data_3.js?v=202611090956"></script>
+<script src="data/apt_data_1.js?v=202611091027"></script>
+<script src="data/apt_data_2.js?v=202611091027"></script>
+<script src="data/apt_data_3.js?v=202611091027"></script>
 <script>
   // 단지 데이터 (점수+가격+이름+주소+세대수+좌표 병합)
   //  s=[역세권,교육,공원,상권,병원,즐길거리] 점수, lat/lng=좌표
@@ -950,7 +969,7 @@
   ["pointerdown", "wheel", "touchstart"].forEach(ev =>
     document.getElementById("map").addEventListener(ev, () => { mapTouched = true; }, { passive: true }));
   function mapMovedByUser(){
-    if(mapTouched && autoScope){         // 지도가 지역을 정함: 시·구·동 선택은 풀고 지도에 보이는 곳으로
+    if(mapTouched && autoScope && !document.body.classList.contains("mapopen")){         // 지도가 지역을 정함: 시·구·동 선택은 풀고 지도에 보이는 곳으로
       mapScope = true;
       if(guEl.value || dongEl.value){ cityEl.value = ""; buildGu(); buildDong(); dongEl.value = ""; }
     }
@@ -1358,7 +1377,7 @@
       // 지도 이동/확대가 끝나면 그 범위로 자동 재검색.
       // 단지 상세를 보는 중에는 검색 범위를 바꾸지 않는다(지도가 단지로 확대되므로).
       kakao.maps.event.addListener(map, "idle", () => {
-        if(expanded >= 0) return;
+        if(expanded >= 0 || !document.getElementById("map").offsetWidth) return;
         searchBounds = map.getBounds();
         mapMovedByUser();
         render(false);
@@ -1370,8 +1389,8 @@
 
   // 선택한 단지 + 주변 시설을 색깔 점으로 표시 (선택 없으면 지도 비움)
   const FAC_CATS = [
-    ["sub", "#0d9488", "지하철"], ["sch", "#9333ea", "학교"],
-    ["com", "#f97316", "상권"], ["hos", "#dc2626", "병원"], ["park", "#65a30d", "공원"],
+    ["sub", "#0d9488", "지하철", "🚇"], ["sch", "#9333ea", "학교", "🏫"],
+    ["com", "#f97316", "음식점·카페", "🍴"], ["hos", "#dc2626", "병원", "🏥"], ["park", "#65a30d", "공원", "🌳"],
   ];
   // 두 좌표 간 대략 거리(m)
   function distM(la1, ln1, la2, ln2){
@@ -1383,9 +1402,11 @@
   // 지도에 색깔 점(CustomOverlay) 하나 추가.
   //  idx  : 전체보기의 단지 점 → 클릭하면 그 카드 열기
   //  info : 시설 점 [라벨, 이름, 카테고리, 장소ID] → 클릭하면 정보창 표시
-  function makeDot(lat, lng, color, size, name, idx, info){
+  //  icon : 시설 아이콘(🚇 등) → 색 점 대신 아이콘 표시
+  function makeDot(lat, lng, color, size, name, idx, info, icon){
     const el = document.createElement("div");
-    el.style.cssText = "width:" + size + "px;height:" + size + "px;border-radius:50%;background:" + color +
+    if(icon){ el.className = "facicon"; el.style.borderColor = color; el.textContent = icon; }
+    else el.style.cssText = "width:" + size + "px;height:" + size + "px;border-radius:50%;background:" + color +
       ";border:2px solid #fff;box-shadow:0 0 3px rgba(0,0,0,0.45);cursor:pointer";
     if(name) el.title = name;
     if(idx !== undefined){          // 전체 보기의 단지 점: 클릭하면 그 카드 열기
@@ -1434,10 +1455,17 @@
   }
 
   // 지도 위 이름 라벨 (점 위쪽에 표시)
-  function makeLabel(lat, lng, text, strong){
+  // idx: 전체 보기의 순위 이름표 → 점처럼 누르면 그 카드 열기
+  function makeLabel(lat, lng, text, strong, idx){
     const el = document.createElement("div");
-    el.className = "maplabel" + (strong ? " sel" : "");
+    el.className = "maplabel" + (strong ? " sel" : "") + (idx !== undefined ? " go" : "");
     el.textContent = text;
+    if(idx !== undefined) el.addEventListener("click", () => {
+      expanded = idx;
+      render(false);
+      const c = document.querySelectorAll(".card")[idx];
+      if(c) c.scrollIntoView({ behavior:"smooth", block:"center" });
+    });
     const ov = new kakao.maps.CustomOverlay({
       position: new kakao.maps.LatLng(lat, lng), content: el,
       xAnchor: 0.5, yAnchor: 1.9, zIndex: strong ? 6 : 4,
@@ -1462,17 +1490,24 @@
     // === 상세 모드: 선택한 단지 + 주변 시설 ===
     if(expanded >= 0 && shownList[expanded]){
       const x = shownList[expanded].x;
+      if(lf){                                  // 범례: 아이콘 + 1km 안 개수 (병원·음식점·카페)
+        const n = v => (v == null ? "" : " " + v.toLocaleString() + "곳");
+        lf.innerHTML = '<span class="lg">🚇 지하철</span><span class="lg">🏫 학교</span>' +
+          '<span class="lg">🍴 음식점·카페' + n(x.fc == null ? null : x.fc + (x.cc || 0)) + '</span>' +
+          '<span class="lg">🏥 병원' + n(x.hc) + '</span><span class="lg">🌳 공원</span>' +
+          (x.hc != null ? '<span class="lg" style="color:var(--muted)">(개수는 1km 안)</span>' : '');
+      }
       if(x.lat == null) return;
       const bounds = new kakao.maps.LatLngBounds();
       bounds.extend(new kakao.maps.LatLng(x.lat, x.lng));
       makeDot(x.lat, x.lng, "#2563eb", 16, x.n + " · 종합 " + s10(totalScore(x, getWeights())));
       makeLabel(x.lat, x.lng, x.n, true);
       const fac = x.fac || {};
-      FAC_CATS.forEach(([key, color, label]) => {
+      FAC_CATS.forEach(([key, color, label, icon]) => {
         (fac[key] || []).forEach(p => {
           // p = [이름, 위도, 경도, 카테고리, 장소ID]
           makeDot(p[1], p[2], color, 12, label + " · " + p[0], undefined,
-                  [label, p[0], p[3] || "", p[4] || ""]);
+                  [label, p[0], p[3] || "", p[4] || ""], icon);
           if(distM(x.lat, x.lng, p[1], p[2]) <= 900) bounds.extend(new kakao.maps.LatLng(p[1], p[2]));
         });
       });
@@ -1488,7 +1523,7 @@
       if(x.lat == null) return;
       makeDot(x.lat, x.lng, scoreColor(r.t), 12,
         (i + 1) + "위 · " + x.n + " · 종합 " + s10(r.t), i);
-      if(i < 5) makeLabel(x.lat, x.lng, (i + 1) + "위 " + x.n, false);   // 상위 5개만 이름 표시(겹침 방지)
+      if(i < 5) makeLabel(x.lat, x.lng, (i + 1) + "위 " + x.n, false, i);   // 상위 5개만 이름 표시(겹침 방지)
       bounds.extend(new kakao.maps.LatLng(x.lat, x.lng));
       cnt++;
     });
@@ -1899,9 +1934,9 @@
     };
     const mini = v => v == null ? '-' : '<span class="cbar"><i style="width:' + Math.round(v) + '%"></i></span>' + s10(v);
     let body = row('종합', x => mini(tots[xs.indexOf(x)]), x => totalScore(x, w));
-    body += '<tr><td colspan="' + (xs.length + 1) + '" style="font-size:11.5px;color:var(--muted);text-align:left">항목 점수에 마우스를 올리면 왜 그 점수인지 보여요</td></tr>';
+    body += '<tr><td colspan="' + (xs.length + 1) + '" style="font-size:11.5px;color:var(--muted);text-align:left">항목 점수를 누르면(PC는 마우스를 올리면) 이유가 보여요</td></tr>';
     DIMS.forEach(([nm, di]) => {               // 중요도 0인 항목은 빼서 표를 짧게
-      if(w[di] > 0) body += row(nm, x => '<span class="why" tabindex="0" data-tip="' +
+      if(w[di] > 0) body += row(nm, x => '<span class="cwhy" tabindex="0" data-tip="' +
         esc(axisWhy(x, di)).replace(/"/g, '&quot;') + '">' + mini(x._ax[di]) + '</span>', x => (x._ax[di] === undefined ? -1 : x._ax[di]));
     });
     const fNow = getFilters(), cheapM = x => matchPys(x, fNow).sort((a, b) => a[2] - b[2])[0];   // 조건에 맞는 평형 중 가장 싼 것
@@ -2021,7 +2056,20 @@
   };
   window.toggleMapView = function(){           // 휴대폰: 지도를 화면 전체로 열고 닫기
     document.body.classList.toggle("mapopen");
-    setTimeout(() => { window.dispatchEvent(new Event("resize")); if(expanded >= 0) updateMap(); }, 60);
+    setTimeout(() => {
+      window.dispatchEvent(new Event("resize"));
+      if(expanded >= 0) updateMap(); else if(document.body.classList.contains("mapopen")) fitResults();
+    }, 60);
+  };
+  function fitResults(){                       // 지금 목록의 단지가 모두 보이게 지도 맞춤 (카카오·오픈스트리트맵 공통)
+    if(!map) return;
+    const pts = shownList.map(r => r.x).filter(x => x.lat != null);
+    if(!pts.length) return;
+    if(typeof kakao !== "undefined" && kakao.maps && kakao.maps.LatLngBounds){
+      const b = new kakao.maps.LatLngBounds();
+      pts.forEach(x => b.extend(new kakao.maps.LatLng(x.lat, x.lng)));
+      map.setBounds(b, 40, 40, 40, 40);
+    } else if(map.fitBounds) map.fitBounds(pts.map(x => [x.lat, x.lng]), { padding: [30, 30] });
   };
   // 대출 · 월 상환 계산 (원리금 균등). 입력값은 이 브라우저에만 저장
   let loan = { own: 3, rate: 4, years: 30 };
@@ -2353,8 +2401,14 @@
     countEl.innerHTML = esc(label) + ' <span class="scope">' + (scoped()
       ? '· 지도에 보이는 곳' + (visG ? ' (' + visG + ')' : '') + ' · 전체 ' + nAll + '곳 중 <button class="linkbtn" onclick="setScope(false)">전체 보기</button>'
       : '· ' + (dong || gu || '모든 지역') + ' 기준' + (!map ? ''
-        : autoScope ? ' · 지도를 움직이면 그 범위로 바뀌어요 <button class="linkbtn" onclick="setAutoScope(false)">끄기</button>'
-        : ' <button class="linkbtn" onclick="setAutoScope(true)">지도 따라가기 켜기</button>')) + '</span>';
+        : autoScope ? '<span class="deskonly"> · 지도를 움직이면 그 범위로 바뀌어요 <button class="linkbtn" onclick="setAutoScope(false)">끄기</button></span>'
+        : ' <span class="deskonly"><button class="linkbtn" onclick="setAutoScope(true)">지도 따라가기 켜기</button></span>')) + '</span>';
+    // 휴대폰 지도 화면 위 요약: 상황 · 예산·평형 · 지역 · 개수
+    const mapSumEl = document.getElementById("mapSum");
+    if(mapSumEl) mapSumEl.innerHTML = (sel.length ? '<b>' + esc(personas().map(p => p.name).join('·')) + '</b> · ' : '') +
+      esc(conds.filter(c => c !== gu && c !== dong).join(' · ') || '조건 없음') + ' · ' +
+      esc(scoped() ? (visG || '지도에 보이는 곳') : (dong || gu || '모든 지역')) +
+      ' <span>· ' + pool.length + '곳' + (pool.length > TOP_N ? ' (상위 ' + TOP_N + '곳 표시)' : '') + '</span>';
     const panelEl = document.querySelector(".panel");
     if(!ready(f)) panelEl.classList.remove("collapsed");
     const go = document.getElementById("goBtn");
