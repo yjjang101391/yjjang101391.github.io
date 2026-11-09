@@ -127,6 +127,13 @@
   .cmpbtn.on{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
   @media (prefers-color-scheme: dark){ .cmpbtn.on{color:#12283d} }
   .wishbar{display:flex;gap:8px;align-items:center;margin-bottom:10px}
+  /* 목록 위 지역 요약 · 점수 기준 안내 (2026-11-09) */
+  .brief{font-size:13px;line-height:1.55;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:9px 12px;margin:0 0 10px}
+  .brief .bn{color:var(--muted);display:block;font-size:12px;margin-top:2px}
+  .scorehelp{margin-left:auto;font-size:12.5px;padding:6px 12px;border-radius:999px;border:1px solid var(--border);
+    background:var(--card);color:var(--accent);cursor:pointer}
+  .shbox{font-size:13px;line-height:1.6;background:var(--head);border-radius:10px;padding:10px 13px;margin:0 0 12px}
+  .shbox ul{margin:4px 0 6px;padding-left:18px}
   .wishbtn{font-size:12.5px;padding:6px 13px;border-radius:999px;border:1px solid var(--border);
     background:var(--card);color:var(--muted);cursor:pointer;font-weight:600}
   .wishbtn.has{border-color:var(--accent);color:var(--accent)}
@@ -172,6 +179,8 @@
   .info .nm{font-size:15.5px;font-weight:600}
   .info .nm .chev{font-size:10px;color:var(--muted);margin-left:4px}
   .info .meta{font-size:12px;color:var(--muted);margin-top:1px}
+  .info .price{font-size:13.5px;font-weight:600;color:var(--text);margin-top:2px}
+  .info .price .ym{font-size:11.5px;font-weight:400;color:var(--muted);margin-left:3px}
   .info .dims{font-size:11.5px;color:var(--muted);margin-top:5px}
   .info .dims b{color:var(--text);font-weight:600}
   .total{flex:none;text-align:right;width:56px}
@@ -377,6 +386,14 @@
   /* v0.6.0: 목록 범위 · 휴대폰 지도 · 결과 바로 보기 · 3곳 요약 · 대출 계산 */
   .scope{font-size:12.5px;color:var(--muted);margin-left:4px}
   .mobonly,.mapclose{display:none}
+  /* 휴대폰: 조건을 고른 뒤 결과가 화면 아래에 있으면 띄우는 버튼 */
+  .gores{display:none;position:fixed;left:50%;transform:translateX(-50%);bottom:16px;z-index:1100;font-size:14px;font-weight:600;
+    padding:11px 20px;border-radius:999px;border:none;background:var(--accent);color:#fff;box-shadow:0 3px 12px rgba(0,0,0,.25);cursor:pointer}
+  @media (prefers-color-scheme: dark){ .gores{color:#12283d} }
+  /* 동네 배경: 지역 고르기 */
+  .bgpick{display:flex;align-items:center;gap:8px;margin:0 0 12px;font-size:13.5px}
+  .bgpick select{font:inherit;padding:7px 10px;border:1px solid var(--border);border-radius:8px;background:var(--card);color:var(--text)}
+  .bgpick span{color:var(--muted);font-size:12.5px}
   /* 휴대폰 지도 화면 위 조건 요약 (2026-11-09) */
   .mapbar{display:none;align-items:center;gap:8px;margin:0 0 8px}
   .mapsum{flex:1;min-width:0;font-size:13px;line-height:1.4;color:var(--text);display:-webkit-box;-webkit-line-clamp:2;
@@ -415,9 +432,27 @@
     .howto{display:none}
     .tips .tip:nth-child(n+2){display:none}
     .mdot em{font-size:11px}
+    /* 결과 카드: 찜·비교는 아래 줄로 → 이름·정보 칸을 넓게 */
+    .row{flex-wrap:wrap;gap:8px 10px;padding:12px 13px}
+    .rank{width:24px;font-size:17px}
+    .total{width:48px}
+    .cbtns{order:5;flex:1 1 100%;flex-direction:row;gap:6px;padding-left:34px}
+    .badges .badge:nth-child(n+3){display:none}
+    .gores.show{display:block}
     body.mapopen .mapclose{display:block;margin:0 0 8px auto;font-size:13px;padding:6px 12px;border:1px solid var(--border);border-radius:999px;background:var(--card);color:var(--text);cursor:pointer}
   }
   .wl b{color:var(--text);font-weight:600}
+  /* 상황별 중요도 태그 (2026-11-09) */
+  .prio{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:5px 0}
+  .prio .pl{font-size:12.5px;font-weight:700;width:58px;flex:none}
+  .prio .pl.hi{color:var(--accent)}
+  .prio .pl.lo{color:var(--muted)}
+  .pt{font-size:13px;padding:4px 11px;border-radius:999px;border:1px solid var(--border)}
+  .pt.hi{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+  .pt.hi i{font-style:normal;font-weight:400;font-size:11.5px;opacity:.85;margin-left:4px}
+  .pt.lo{background:var(--card);color:var(--muted)}
+  .pchg{font-size:12px;padding:4px 11px;border-radius:999px;border:1px dashed var(--accent);background:none;color:var(--accent);cursor:pointer}
+  @media (prefers-color-scheme: dark){ .pt.hi{color:#12283d} }
   /* 추가 조건 칩: 마우스를 올리면 기준 설명 */
   .chip[data-tip]{position:relative}
   .chip[data-tip]:hover::after,.chip[data-tip]:focus-visible::after{content:attr(data-tip);position:absolute;left:0;top:calc(100% + 6px);z-index:50;
@@ -442,7 +477,7 @@
 <div class="wrap">
   <header class="hero">
     <h1>처음 가는 동네, 우리 집에 맞는 아파트 찾기</h1>
-    <p class="sub" id="subline"><b>내 상황</b>에 맞춰 교통·학교·병원·공원을 점수로 매기고, <b>예산·평형</b> 안에서 <b>살기 좋은 순</b>으로 보여 드려요.</p>
+    <p class="sub" id="subline"><b>내 상황·예산</b>만 고르면, <b>살기 좋은 아파트 순위</b>를 바로 보여 드려요.</p>
     <ol class="howto"><li><b>1</b>동네 · 상황</li><li><b>2</b>예산 · 평형</li><li><b>3</b>추천 순위 · 비교 · 엑셀</li></ol>
     <p class="dataline" id="dataline"></p>
   </header>
@@ -553,9 +588,11 @@
   </div>
     <div class="qbox"><input id="q" type="search" placeholder="🔍 단지 이름으로 찾기" autocomplete="off"><div id="qres" class="qres"></div></div>
     <div class="resbar"><p class="count" id="count"></p><button class="sharebtn mobonly" onclick="toggleMapView()">🗺 지도 보기</button><button class="sharebtn" id="shareBtn" onclick="shareLink()">🔗 이 조건 링크 복사</button></div>
+  <div id="areaBrief"></div>
   <div id="tips" class="tips"></div>
     <div id="results"></div>
     <div id="cmpTray" class="cmptray"></div>
+    <button id="goRes" class="gores" onclick="goResults()"></button>
     </div>
 
     <div class="col-right">
@@ -577,9 +614,9 @@
 </div>
 
 <div id="webLoading" style="position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:3000;background:#2b2a28;color:#fff;font-size:13px;padding:9px 16px;border-radius:999px;box-shadow:0 3px 12px rgba(0,0,0,.25)">자료를 불러오는 중이에요 (처음 한 번 몇 초 걸려요)</div>
-<script src="data/apt_data_1.js?v=202611091027"></script>
-<script src="data/apt_data_2.js?v=202611091027"></script>
-<script src="data/apt_data_3.js?v=202611091027"></script>
+<script src="data/apt_data_1.js?v=202611091038"></script>
+<script src="data/apt_data_2.js?v=202611091038"></script>
+<script src="data/apt_data_3.js?v=202611091038"></script>
 <script>
   // 단지 데이터 (점수+가격+이름+주소+세대수+좌표 병합)
   //  s=[역세권,교육,공원,상권,병원,즐길거리] 점수, lat/lng=좌표
@@ -988,10 +1025,11 @@
   const dongEl = document.getElementById("dong");
   // 평형대 (전용면적 ㎡, 여러 개 선택) — 필수. 가운데 글자는 흔히 부르는 공급면적 평형(대략)
   const AREA_BANDS = [
-    ["소형", "60㎡ 이하", "~24평형", 0, 60],
-    ["국민평형", "60~85㎡", "25~34평형", 60, 85],
-    ["중대형", "85~135㎡", "35~52평형", 85, 135],
-    ["대형", "135㎡ 초과", "53평형~", 135, Infinity],
+    // ㎡는 소수점을 버린 값(84.97㎡ → 84㎡, 업계 표기)이라 구간을 정수로 겹치지 않게 나눈다
+    ["소형", "59㎡ 이하", "~24평형", 0, 59],
+    ["국민평형", "60~84㎡", "25~34평형", 59, 84],
+    ["중대형", "85~135㎡", "35~52평형", 84, 135],
+    ["대형", "136㎡ 이상", "53평형~", 135, Infinity],
   ];
   let areaSel = [];                   // 고른 평형대 번호
   const inBand = (m2, i) => m2 > AREA_BANDS[i][3] && m2 <= AREA_BANDS[i][4];
@@ -1095,9 +1133,12 @@
       el.textContent = "고르면 꼭 필요한 조건과 중요도가 자동으로 정해져요.";
       return;
     }
-    el.innerHTML = '<span class="wl"><b>중요하게</b> ' + hi.map(d => d.nm).join(' · ') +
-      (lo.length ? '　<b>' + (lo.every(d => d.v === 0) ? '안 봐요' : '덜 봐요') + '</b> ' + lo.map(d => d.nm).join(' · ') : '') +
-      ' <button class="linkbtn" onclick="openWeights()">바꾸기</button></span>' +
+    // 중요하게 = 진한 태그(중요도 숫자), 덜 봐요 = 흐린 태그 — 두 줄로 나눠 한눈에
+    el.innerHTML = '<span class="prio"><span class="pl hi">중요하게</span>' +
+      hi.map(d => '<span class="pt hi">' + d.nm + '<i>' + d.v + '</i></span>').join('') +
+      '<button class="pchg" onclick="openWeights()">중요도 바꾸기</button></span>' +
+      (lo.length ? '<span class="prio"><span class="pl lo">' + (lo.every(d => d.v === 0) ? '안 봐요' : '덜 봐요') + '</span>' +
+        lo.map(d => '<span class="pt lo">' + d.nm + '</span>').join('') + '</span>' : '') +
       (child ? '<br>자녀 단계는 여러 개 고를 수 있어요.' : '');
   }
   window.openWeights = function(){
@@ -1671,7 +1712,7 @@
     const chips = '<div class="chips pychips">' +
       '<button class="chip' + (dealPy == null ? ' on' : '') + '" onclick="setDealPy(\'\')">전체 평형</button>' +
       pys.map(v => '<button class="chip' + (dealPy === v ? ' on' : '') +
-        '" onclick="setDealPy(\'' + v + '\')">' + Math.round(v * 3.3058) + '㎡ · ' + pyg(v * 3.3058) + '평</button>').join('') + '</div>';
+        '" onclick="setDealPy(\'' + v + '\')">' + Math.floor(v * 3.3058 + 0.01) + '㎡ · ' + pyg(v * 3.3058) + '평</button>').join('') + '</div>';
 
     // 월별 집계: 평형을 고르면 실거래 금액, 전체면 평당가(평형이 섞이므로)
     const byPy = (dealPy != null);
@@ -1701,7 +1742,7 @@
 
     // 거래 내역 (최근순)
     const list = rows.slice().reverse().map(d =>
-      '<tr><td>' + d[0].slice(2,4) + '.' + d[0].slice(4) + '</td><td>' + Math.round(d[1] * 3.3058) + '㎡ (' + pyg(d[1] * 3.3058) + '평)</td>' +
+      '<tr><td>' + d[0].slice(2,4) + '.' + d[0].slice(4) + '</td><td>' + Math.floor(d[1] * 3.3058 + 0.01) + '㎡ (' + pyg(d[1] * 3.3058) + '평)</td>' +
       '<td>' + (d[3] ? d[3] + '층' : '-') + '</td><td class="amt">' + won(d[2]) + '</td></tr>').join('');
 
     return '<div class="dsec-title">실거래 (최근 1년 · ' + rows.length + '건)</div>' + chips +
@@ -2061,6 +2102,23 @@
       if(expanded >= 0) updateMap(); else if(document.body.classList.contains("mapopen")) fitResults();
     }, 60);
   };
+  // 결과 바로 가기 버튼: 휴대폰에서 조건을 다 골랐는데 결과 목록이 화면 아래에 있을 때만
+  let resN = 0;
+  function updateGoRes(){
+    const b = document.getElementById("goRes"), r = document.getElementById("results"), pr = document.getElementById("panel-rec");
+    if(!b || !r) return;
+    const show = ready(getFilters()) && resN > 0 && !document.body.classList.contains("mapopen") &&
+      (!pr || pr.style.display !== "none") && r.getBoundingClientRect().top > innerHeight - 60;
+    b.classList.toggle("show", show);
+    b.style.bottom = (document.querySelector("#cmpTray .cmptray-in, #cmpTray > *") ? 72 : 16) + "px";
+    b.textContent = "결과 " + resN + "곳 보기 ↓";
+  }
+  window.goResults = function(){
+    const r = document.querySelector(".resbar");
+    if(r) r.scrollIntoView({ block: "start" });
+    updateGoRes();
+  };
+  window.addEventListener("scroll", updateGoRes, { passive: true });
   function fitResults(){                       // 지금 목록의 단지가 모두 보이게 지도 맞춤 (카카오·오픈스트리트맵 공통)
     if(!map) return;
     const pts = shownList.map(r => r.x).filter(x => x.lat != null);
@@ -2274,13 +2332,41 @@
   window.wishExcel = () => xlExport(wish, '찜한 아파트 (' + wish.length + '곳)', '찜목록_');
 
   // 찜 목록 패널: 담아둔 단지에서 비교할 것을 고른다
+  // 점수 기준 안내: 탭을 옮기지 않아도 목록에서 바로 (지금 중요도까지)
+  let scoreHelpOpen = false;
+  window.toggleScoreHelp = function(){ scoreHelpOpen = !scoreHelpOpen; render(false); };
+  window.goTab = function(k){ const t = document.querySelector('.tab[data-tab="' + k + '"]'); if(t) t.click(); };
+  function scoreHelpHTML(w){
+    const ws = DIMS.map(([nm, i]) => [nm, w[i]]).filter(d => d[1] > 0).sort((a, b) => b[1] - a[1]);
+    return '<div class="shbox"><b>종합 점수는 이렇게 매겨요</b><ul>' +
+      '<li>항목마다 0~10점. 거리는 걸어서 몇 분인지(가까울수록 높음), 학원·음식점 수 같은 개수는 전체 단지 중 순위</li>' +
+      '<li>종합 = 항목 점수를 지금 중요도로 평균 · ' + ws.map(d => d[0] + ' ' + d[1]).join(' · ') + '</li>' +
+      '<li>단지 상세의 "항목별 점수"와 비교 표에서 항목마다 이유를 볼 수 있어요</li></ul>' +
+      '<button class="linkbtn" onclick="goTab(\'score\')">자세한 기준 보기 →</button></div>';
+  }
+  // 목록 위 지역 요약: 고른 구(또는 지도에 가장 많이 보이는 구)의 한 줄 소개 + 숫자
+  function areaBriefHTML(gu, pool){
+    const groups = new Set(DATA.map(x => x.g));
+    let g = groups.has(gu) ? gu : '';
+    if(!g && scoped() && pool.length){ const c = {}; pool.forEach(x => { c[x.g] = (c[x.g] || 0) + 1; }); g = Object.keys(c).sort((a, b) => c[b] - c[a])[0]; }
+    if(!g) return '';
+    const xs = DATA.filter(x => x.g === g), p = profileOf(xs), note = NOTES[g] || {};
+    const tr = medianOf(xs.filter(x => x.tr && x.tr.q !== 'low').map(x => x.tr.pct));
+    const facts = [p.topDec ? p.topDec + '년대 단지가 가장 많음' : '', '평당 ' + p.ppyMid.toLocaleString() + '만(중앙값)',
+      tr == null ? '' : '1년 시세 ' + (tr > 0 ? '+' : '') + tr.toFixed(1) + '%', p.old30Pct >= 40 ? '30년 넘은 단지 ' + p.old30Pct + '%' : '',
+      p.new10Pct >= 25 ? '10년 안 신축 ' + p.new10Pct + '%' : ''].filter(Boolean);
+    return '<div class="brief"><b>' + g + '</b> ' + (note.history ? firstSentence(note.history) : '') +
+      '<span class="bn">' + facts.join(' · ') + ' · <button class="linkbtn" onclick="goTab(\'bg\')">동네 배경 자세히</button></span></div>';
+  }
   function wishHTML(w){
     const bar = '<div class="wishbar">' +
+      '<button class="scorehelp" style="order:9" onclick="toggleScoreHelp()">ⓘ 점수 기준</button>' +
       '<button class="wishbtn' + (wish.length ? ' has' : '') + '" onclick="wishPanel()">' +
       '♥ 찜 ' + wish.length + '개' + (wish.length ? (wishOpen ? ' 닫기' : ' 보기') : '') + '</button>' +
       (wish.length ? '<button class="cmpclear xl" onclick="wishExcel()">⬇ 엑셀로 받기</button> <button class="cmpclear" onclick="wishClear()">전체 비우기</button>' : '') +
       '</div>';
-    if(!wishOpen || !wish.length) return bar;
+    const help = scoreHelpOpen ? scoreHelpHTML(w) : '';
+    if(!wishOpen || !wish.length) return bar + help;
     const rows = wish.map(n => {
       const x = BYID.get(n);
       if(!x) return '';
@@ -2294,7 +2380,7 @@
         '<span class="ws">' + s10(totalScore(x, w)) + '</span>' +
         '<button class="delbtn" onclick="wishToggle(' + q + ', event)">✕</button></li>';
     }).join('');
-    return bar + '<div class="wishbox"><ul class="wishlist">' + rows + '</ul>' +
+    return bar + help + '<div class="wishbox"><ul class="wishlist">' + rows + '</ul>' +
       '<div class="wishnote">비교할 단지를 ' + CMP_MAX + '개까지 눌러서 고르세요. ' +
       '(' + cmpSel.length + '개 선택됨)</div></div>';
   }
@@ -2307,7 +2393,9 @@
     const dealTxt = dealMode === "jeonse" ? '전세 ' : '';
     if(fActive(f) && matchPys(x, f).length){
       const ms = matchPys(x, f).slice().sort((a, b) => a[2] - b[2]);
-      priceTxt = dealTxt + ms.slice(0, 2).map(p => p[1] + '㎡(' + pyg(p[1]) + '평) ' + won(p[2])).join(' · ') + (ms.length > 2 ? ' 외 ' + (ms.length - 2) + '개' : '');
+      // 가격 옆에 그 가격이 나온 거래월 (예: 26.06 거래) — 오래된 거래인지 바로 보이게
+      const ym = p => (typeof p[7] === 'string' && p[7].length === 6) ? '<span class="ym">' + p[7].slice(2, 4) + '.' + p[7].slice(4) + ' 거래</span>' : '';
+      priceTxt = dealTxt + ms.slice(0, 2).map(p => p[1] + '㎡(' + pyg(p[1]) + '평) ' + won(p[2]) + ym(p)).join(' · ') + (ms.length > 2 ? ' 외 ' + (ms.length - 2) + '개' : '');
     } else {
       priceTxt = dealTxt + '최저 ' + won(minPrice(x));
     }
@@ -2317,7 +2405,8 @@
         '<div class="rank">' + (pin ? '🔍' : rk) + '</div>' +
         '<div class="info">' +
           '<div class="nm">' + x.n + (x.al ? ' <span class="al">' + esc(x.al) + '</span>' : '') + ' <span class="chev">' + (open ? '▲' : '▼') + '</span></div>' +
-          '<div class="meta">' + x.d + (x.y ? ' · ' + x.y + '년' : '') + sedMeta + ' · ' + priceTxt + '</div>' +
+          '<div class="meta">' + x.d + (x.y ? ' · ' + x.y + '년' : '') + sedMeta + '</div>' +
+          '<div class="price">' + priceTxt + '</div>' +
           badges(x, w, rk ? rk - 1 : -1) + warnLine(x, w) + (pin ? pinNote(x, f, rk) : '') +
         '</div>' +
         '<div class="cbtns">' +
@@ -2404,6 +2493,7 @@
         : autoScope ? '<span class="deskonly"> · 지도를 움직이면 그 범위로 바뀌어요 <button class="linkbtn" onclick="setAutoScope(false)">끄기</button></span>'
         : ' <span class="deskonly"><button class="linkbtn" onclick="setAutoScope(true)">지도 따라가기 켜기</button></span>')) + '</span>';
     // 휴대폰 지도 화면 위 요약: 상황 · 예산·평형 · 지역 · 개수
+    resN = pool.length; setTimeout(updateGoRes, 0);
     const mapSumEl = document.getElementById("mapSum");
     if(mapSumEl) mapSumEl.innerHTML = (sel.length ? '<b>' + esc(personas().map(p => p.name).join('·')) + '</b> · ' : '') +
       esc(conds.filter(c => c !== gu && c !== dong).join(' · ') || '조건 없음') + ' · ' +
@@ -2417,6 +2507,8 @@
     if(sh) sh.textContent = visG ? '🗺 지금은 지도에 보이는 곳 기준이에요 (' + visG + '). 시·구를 고르면 그 지역 전체로 바뀌어요.' : '';
     document.getElementById("psum").innerHTML = '<div class="pl"><span>' + esc(who + conds.join(' · ') + (visG ? ' · 지도: ' + visG : '')) + '</span>' +
       '<button class="reset" onclick="editConds()">조건 바꾸기</button></div>' + (gh ? '<div class="gatebox">' + gh + '</div>' : '');
+    const briefEl = document.getElementById("areaBrief");
+    if(briefEl) briefEl.innerHTML = areaBriefHTML(gu, pool);
     const tipEl = document.getElementById("tips");
     if(tipEl){
       const tips = tradeoffs(f, dong, pool.length, gu);
@@ -2583,11 +2675,18 @@
   }
   function firstSentence(t){ const m = (t || '').match(/^(.+?[.!?])(\s|$)/); return m ? m[1] : (t || ''); }
   function medianOf(a){ const s = a.slice().sort((p, q) => p - q); return s.length ? s[Math.floor(s.length / 2)] : null; }
-  function renderBg(){
+  // 동네 배경은 한 번에 한 지역만 (37곳을 다 펼치면 휴대폰에서 화면 38장 분량, 2026-11-09)
+  let bgGu = "";
+  function renderBg(pick){
     const box = document.getElementById("bgDoc");
     if(!box) return;
-    let html = '';
-    [...new Set(DATA.map(x => x.g))].forEach(gu => {
+    const all = [...new Set(DATA.map(x => x.g))];
+    const want = pick || guEl.value || bgGu;
+    bgGu = all.includes(want) ? want : (all.find(g => want && g.startsWith(want)) || bgGu || all[0]);
+    let html = '<div class="bgpick">지역 <select onchange="renderBg(this.value)">' +
+      all.map(g => '<option' + (g === bgGu ? ' selected' : '') + '>' + g + '</option>').join('') +
+      '</select><span>담긴 지역 ' + all.length + '곳</span></div>';
+    [bgGu].forEach(gu => {
       const xs = DATA.filter(x => x.g === gu);
       const p = profileOf(xs);
       const note = NOTES[gu] || {};
@@ -2645,6 +2744,7 @@
     html += '<p class="note">과거·현재는 최근 1년 실거래와 준공연도로 계산했고, 미래는 준공연도로 추정한 것이에요. 개발 계획은 자주 바뀌니 계약 전 직접 확인하세요.</p>';
     box.innerHTML = html;
   }
+  window.renderBg = renderBg;
 
   // 탭 전환
   document.querySelectorAll(".tab").forEach(btn => {
@@ -2655,6 +2755,10 @@
         document.getElementById("panel-" + k).style.display = (k === btn.dataset.tab) ? "block" : "none";
       });
       if(btn.dataset.tab === "rec" && map) setTimeout(() => map.relayout(), 60);
+      if(btn.dataset.tab === "bg") renderBg(guEl.value);           // 추천에서 고른 구를 먼저 보여 줌
+      const tabsEl = document.querySelector(".tabs");              // 탭을 바꾸면 내용 맨 위부터
+      if(tabsEl && tabsEl.getBoundingClientRect().top < 0) tabsEl.scrollIntoView({ block: "start" });
+      updateGoRes();
     });
   });
 
