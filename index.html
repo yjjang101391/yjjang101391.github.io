@@ -317,6 +317,13 @@
   .doc .tl3 b{display:inline;margin:0;font-size:inherit}
   /* 동네 배경 · 점수 기준 (간결) */
   .bgsec{margin-bottom:24px}
+  /* 동네 배경: 과거→지금→앞으로 한 줄 이야기, 연대별 지금 평당가 (2026-11-09) */
+  .bgstory{font-size:14px;line-height:1.65;background:var(--head);border-radius:10px;padding:10px 13px;margin:0 0 12px}
+  .bgstory .ar{color:var(--accent);font-weight:700;margin:0 2px}
+  .doc .bgstory b{display:inline;margin:0;font-size:inherit;color:var(--text)}
+  .hb.dec .hbv{width:auto;min-width:100px}
+  .hb.dec .hbv b{color:var(--text);font-weight:600}
+  .bgpick select + select{margin-left:2px}
   .tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin:6px 0 14px}
   .tile{background:var(--head);border-radius:10px;padding:10px 12px;display:flex;flex-direction:column;gap:2px}
   .tile strong{font-size:18px;color:var(--accent);font-variant-numeric:tabular-nums}
@@ -446,6 +453,11 @@
     .howto{display:none}
     .tips .tip:nth-child(n+2){display:none}
     .mdot em{font-size:11px}
+    /* 시·구·동은 한 줄 3칸, 평형 칩은 ㎡만, 가격 표 아래 설명은 숨김 */
+    .ctrl-top{display:grid;grid-template-columns:repeat(3, minmax(0, 1fr));gap:6px}
+    .ctrl-top select{width:100%;min-width:0;font-size:13px;padding:7px 6px}
+    .chip .pyh{display:none}
+    .qdeal .mnote{display:none}
     /* 결과 카드: 찜·비교는 아래 줄로 → 이름·정보 칸을 넓게 */
     .row{flex-wrap:wrap;gap:8px 10px;padding:12px 13px}
     .rank{width:24px;font-size:17px}
@@ -622,9 +634,9 @@
 </div>
 
 <div id="webLoading" style="position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:3000;background:#2b2a28;color:#fff;font-size:13px;padding:9px 16px;border-radius:999px;box-shadow:0 3px 12px rgba(0,0,0,.25)">자료를 불러오는 중이에요 (처음 한 번 몇 초 걸려요)</div>
-<script src="data/apt_data_1.js?v=202611091105"></script>
-<script src="data/apt_data_2.js?v=202611091105"></script>
-<script src="data/apt_data_3.js?v=202611091105"></script>
+<script src="data/apt_data_1.js?v=202611091112"></script>
+<script src="data/apt_data_2.js?v=202611091112"></script>
+<script src="data/apt_data_3.js?v=202611091112"></script>
 <script>
   // 단지 데이터 (점수+가격+이름+주소+세대수+좌표 병합)
   //  s=[역세권,교육,공원,상권,병원,즐길거리] 점수, lat/lng=좌표
@@ -1211,7 +1223,7 @@
     });
     const [lo, hi] = rangeOf("budget");
     document.getElementById("chipArea").innerHTML = AREA_BANDS.map((b, i) =>
-      '<button class="chip' + (areaSel.includes(i) ? ' on' : '') + '" data-a="' + i + '">' + b[0] + ' <small>' + b[1] + ' · ' + b[2] + '</small>' +
+      '<button class="chip' + (areaSel.includes(i) ? ' on' : '') + '" data-a="' + i + '">' + b[0] + ' <small>' + b[1] + '<span class="pyh"> · ' + b[2] + '</span></small>' +
       ' <span class="cnt">' + budgetCount(lo, hi, [i]) + '</span></button>').join('');
   }
   // 예산 칩 옆 단지 수: 선택한 시·구·동 안에서 그 가격대(매매/전세 선택 기준) 평형이 하나라도 있는 단지 수
@@ -1770,7 +1782,7 @@
       '<a href="https://map.naver.com/p/search/' + q + '" target="_blank" rel="noopener">네이버지도에서 보기 →</a>' +
       '<a href="https://map.kakao.com/?q=' + q + '" target="_blank" rel="noopener">카카오맵에서 보기 →</a>' +
       '</div>' +
-      '<div class="mnote">실거래가는 위에 바로 보여요. 지금 나와 있는 매물(호가)은 공개 데이터가 없어 새 창으로 열려요.</div>';
+      '';
   }
 
   // 왜 이 순위인지: 중요하게 본 항목에서 이 단지가 상위 몇 %인지
@@ -2694,72 +2706,93 @@
   function firstSentence(t){ const m = (t || '').match(/^(.+?[.!?])(\s|$)/); return m ? m[1] : (t || ''); }
   function medianOf(a){ const s = a.slice().sort((p, q) => p - q); return s.length ? s[Math.floor(s.length / 2)] : null; }
   // 동네 배경은 한 번에 한 지역만 (37곳을 다 펼치면 휴대폰에서 화면 38장 분량, 2026-11-09)
-  let bgGu = "";
-  function renderBg(pick){
+  let bgGu = "", bgDong = "";
+  // 단지 하나의 평당가 (평형별 대표 시세 ÷ 전용평의 중앙값, 만원)
+  const cxPpy = x => medianOf((x.py || []).filter(p => p[0]).map(p => Math.round(p[2] / p[0])));
+  function renderBg(pick, dong){
     const box = document.getElementById("bgDoc");
     if(!box) return;
     const all = [...new Set(DATA.map(x => x.g))];
     const want = pick || guEl.value || bgGu;
-    bgGu = all.includes(want) ? want : (all.find(g => want && g.startsWith(want)) || bgGu || all[0]);
-    let html = '<div class="bgpick">지역 <select onchange="renderBg(this.value)">' +
-      all.map(g => '<option' + (g === bgGu ? ' selected' : '') + '>' + g + '</option>').join('') +
-      '</select><span>담긴 지역 ' + all.length + '곳</span></div>';
-    [bgGu].forEach(gu => {
-      const xs = DATA.filter(x => x.g === gu);
-      const p = profileOf(xs);
-      const note = NOTES[gu] || {};
-      const years = xs.map(x => parseInt(x.y)).filter(Boolean);
-      // 과거: 연대별 단지 수
-      const dec = {};
-      years.forEach(y => { const k = Math.floor(y / 10) * 10; dec[k] = (dec[k] || 0) + 1; });
-      const decRows = Object.keys(dec).sort().map(k => [k + '년대', dec[k]]);
-      const topDec = decRows.slice().sort((a, b) => b[1] - a[1])[0] || ['-', 0];
-      // 현재: 시세 수준과 최근 1년 흐름 (거래가 충분한 단지만)
-      const tr = xs.filter(x => x.tr && x.tr.q !== 'low').map(x => x.tr.pct);
-      const trMid = medianOf(tr), upPct = tr.length ? Math.round(tr.filter(v => v > 0).length / tr.length * 100) : null;
-      const dongRows = [...new Set(xs.map(x => x.d))]
-        .map(d => [d, profileOf(xs.filter(x => x.d === d)).ppyMid]).sort((a, b) => b[1] - a[1]).slice(0, 5);
-      // 미래(추정): 재건축 연한(30년)을 넘는 단지 비율이 10년 뒤 얼마나 되는지 + 재건축 추진 단지
-      const share = lim => years.length ? Math.round(years.filter(y => y <= lim).length / years.length * 100) : 0;
-      const oldNow = share(NOW_YEAR - 30), old10 = share(NOW_YEAR + 10 - 30);
-      const rbs = xs.filter(x => x.rb);
-      let futMsg;                         // 재건축 추진 정도와 노후화 속도로 지역마다 다르게 추정
-      if(rbs.length >= 5) futMsg = '재건축 추진 단지가 ' + rbs.length + '곳이라 10년 안에 새 아파트 단지로 바뀌는 곳이 늘어날 거예요.';
-      else if(old10 >= 60) futMsg = '10년 뒤엔 단지 ' + old10 + '%가 30년을 넘어요. 재건축 기대는 커지지만 그동안은 노후 단지가 많아요.';
-      else if(old10 - oldNow >= 20) futMsg = '노후 단지가 빠르게 늘어요 (10년 새 +' + (old10 - oldNow) + '%p). 재건축 논의가 시작될 수 있는 동네예요.';
-      else if(p.new10Pct >= 25) futMsg = '최근 신축이 ' + p.new10Pct + '%라 당분간 새 아파트 위주 동네로 유지될 가능성이 커요.';
-      else futMsg = '큰 변화보다는 지금 모습이 이어질 가능성이 커요.';
-      const gauge = (label, v) => '<div class="hb"><span class="hbn">' + label + '</span><span class="hbt"><i style="width:' + v +
-        '%"></i></span><span class="hbv">' + v + '%</span></div>';
+    const g = all.includes(want) ? want : (all.find(v => want && v.startsWith(want)) || bgGu || all[0]);
+    if(g !== bgGu) bgDong = "";                       // 구가 바뀌면 동은 전체로
+    bgGu = g;
+    if(dong !== undefined) bgDong = dong;
+    const gxs = DATA.filter(x => x.g === bgGu);
+    const dongs = [...new Set(gxs.map(x => x.d))].sort();
+    if(bgDong && !dongs.includes(bgDong)) bgDong = "";
+    let html = '<div class="bgpick">지역 <select onchange="renderBg(this.value, \'\')">' +
+      all.map(v => '<option' + (v === bgGu ? ' selected' : '') + '>' + v + '</option>').join('') + '</select>' +
+      '<select onchange="renderBg(\'' + bgGu + '\', this.value)"><option value="">동 전체</option>' +
+      dongs.map(d => '<option' + (d === bgDong ? ' selected' : '') + '>' + d + '</option>').join('') + '</select></div>';
 
-      html += '<section class="bgsec"><h3 class="gu">' + gu + ' <span>' + p.n + '개 단지</span></h3><div class="tl3">' +
-        '<div class="tl3c"><div class="tl3h">과거 · 어떻게 만들어졌나</div>' +
-          '<div class="tl3m">' + topDec[0] + '에 가장 많이 지어졌어요 <span>(' + topDec[1] + '개)</span></div>' +
-          hbars(decRows, v => v + '개') +
-          (note.history ? '<div class="tl3n">' + firstSentence(note.history) + '</div>' : '') + '</div>' +
-        '<div class="tl3c"><div class="tl3h">현재 · 지금은</div>' +
-          '<div class="tiles t2">' + tile(p.ppyMid.toLocaleString() + '만', '평당가 중앙값') +
-            tile(trMid == null ? '-' : (trMid > 0 ? '+' : '') + trMid.toFixed(1) + '%', '최근 1년 시세 (중앙값)') + '</div>' +
-          (upPct == null ? '' : '<div class="tl3m">거래 단지 중 <b>' + upPct + '%</b>가 올랐어요</div>') +
-          hbars(dongRows, v => v.toLocaleString() + '만') + '</div>' +
-        '<div class="tl3c fut"><div class="tl3h">미래 · 앞으로 (추정)</div>' +
-          '<div class="tl3m">재건축 연한(30년) 넘는 단지</div>' +
-          '<div class="hbars">' + gauge('지금', oldNow) + gauge('10년 뒤', old10) + '</div>' +
-          (rbs.length ? '<div class="tl3m">재건축 추진 <b>' + rbs.length + '곳</b> · ' +
-            [...new Set(rbs.map(x => x.rb[0]))].slice(0, 3).join(', ') + '</div>' : '') +
-          '<div class="tl3n strong">' + futMsg + '</div>' +
-          (note.future ? '<div class="tl3n">' + firstSentence(note.future) + '</div>' : '') + '</div>' +
-        '</div>' +
-        ((note.history || note.future || note.caution || (note.local && note.local.length)) ?
-          '<details class="fold"><summary>동네 이야기 자세히</summary>' +
-          (note.history ? '<b>어떻게 지금 모습이 됐나</b><p>' + note.history + '</p>' : '') +
-          (note.future ? '<b>앞으로 어떻게 바뀌나</b><p>' + note.future + '</p>' : '') +
-          (note.caution ? '<b>집 사기 전 꼭 알아야 할 것</b><p>' + note.caution + '</p>' : '') +
-          (note.local && note.local.length ? '<b>여기 살아본 사람 이야기</b><ul class="localnote">' +
-            note.local.map(t => '<li>' + t + '</li>').join('') + '</ul>' : '') + '</details>' : '') +
-        '</section>';
-    });
-    html += '<p class="note">과거·현재는 최근 1년 실거래와 준공연도로 계산했고, 미래는 준공연도로 추정한 것이에요. 개발 계획은 자주 바뀌니 계약 전 직접 확인하세요.</p>';
+    const xs = bgDong ? gxs.filter(x => x.d === bgDong) : gxs;
+    const p = profileOf(xs), gp = profileOf(gxs);
+    const note = bgDong ? {} : (NOTES[bgGu] || {});   // 사람이 쓴 동네 원고는 구 단위
+    const years = xs.map(x => parseInt(x.y)).filter(Boolean);
+    // 과거: 연대별 단지 수 + 그 연대 단지들의 지금 평당가 (언제 지은 집이 지금 얼마인지)
+    const dec = {};
+    xs.forEach(x => { const y = parseInt(x.y); if(!y) return; const k = Math.floor(y / 10) * 10; (dec[k] = dec[k] || []).push(x); });
+    const decRows = Object.keys(dec).sort().map(k => ({ k: k + '년대', n: dec[k].length,
+      ppy: medianOf(dec[k].map(cxPpy).filter(v => v != null)) }));
+    const top = decRows.slice().sort((a, b) => b.n - a.n)[0] || { k: '-', n: 0 };
+    const mx = Math.max(1, ...decRows.map(r => r.n));
+    const decBars = '<div class="hbars">' + decRows.map(r => '<div class="hb dec"><span class="hbn">' + r.k + '</span>' +
+      '<span class="hbt"><i style="width:' + Math.round(r.n / mx * 100) + '%"></i></span>' +
+      '<span class="hbv">' + r.n + '개 · <b>' + (r.ppy == null ? '-' : r.ppy.toLocaleString() + '만') + '</b></span></div>').join('') + '</div>';
+    // 지금: 시세 수준과 최근 1년 흐름 (거래가 충분한 단지만)
+    const tr = xs.filter(x => x.tr && x.tr.q !== 'low').map(x => x.tr.pct);
+    const trMid = medianOf(tr), upPct = tr.length ? Math.round(tr.filter(v => v > 0).length / tr.length * 100) : null;
+    const dongRows = [...new Set(xs.map(x => x.d))]
+      .map(d => [d, profileOf(xs.filter(x => x.d === d)).ppyMid]).sort((a, b) => b[1] - a[1]).slice(0, 5);
+    const vsGu = (bgDong && gp.ppyMid) ? Math.round((p.ppyMid / gp.ppyMid - 1) * 100) : null;
+    // 앞으로(추정): 재건축 연한(30년)을 넘는 단지 비율이 10년 뒤 얼마나 되는지 + 재건축 추진 단지
+    const share = lim => years.length ? Math.round(years.filter(y => y <= lim).length / years.length * 100) : 0;
+    const oldNow = share(NOW_YEAR - 30), old10 = share(NOW_YEAR + 10 - 30);
+    const rbs = xs.filter(x => x.rb);
+    let futMsg;                         // 재건축 추진 정도와 노후화 속도로 지역마다 다르게 추정
+    if(rbs.length >= 5) futMsg = '재건축 추진 단지가 ' + rbs.length + '곳이라 10년 안에 새 아파트 단지로 바뀌는 곳이 늘어날 거예요.';
+    else if(old10 >= 60) futMsg = '10년 뒤엔 단지 ' + old10 + '%가 30년을 넘어요. 재건축 기대는 커지지만 그동안은 노후 단지가 많아요.';
+    else if(old10 - oldNow >= 20) futMsg = '노후 단지가 빠르게 늘어요 (10년 새 +' + (old10 - oldNow) + '%p). 재건축 논의가 시작될 수 있는 동네예요.';
+    else if(p.new10Pct >= 25) futMsg = '최근 신축이 ' + p.new10Pct + '%라 당분간 새 아파트 위주 동네로 유지될 가능성이 커요.';
+    else futMsg = '큰 변화보다는 지금 모습이 이어질 가능성이 커요.';
+    const gauge = (label, v) => '<div class="hb"><span class="hbn">' + label + '</span><span class="hbt"><i style="width:' + v +
+      '%"></i></span><span class="hbv">' + v + '%</span></div>';
+    // 이야기 한 줄: 과거 → 지금 → 앞으로
+    const story = '<div class="bgstory"><b>' + top.k + '</b>에 지은 단지가 가장 많아요 (' + top.n + '개)' +
+      ' <span class="ar">→</span> 지금 평당 <b>' + p.ppyMid.toLocaleString() + '만</b>' +
+      (trMid == null ? '' : ', 1년 <b>' + (trMid > 0 ? '+' : '') + trMid.toFixed(1) + '%</b>') +
+      ' <span class="ar">→</span> 10년 뒤 <b>' + old10 + '%</b>가 30년을 넘어요' +
+      (rbs.length ? ' (재건축 추진 ' + rbs.length + '곳)' : '') + '</div>';
+
+    html += '<section class="bgsec"><h3 class="gu">' + bgGu + (bgDong ? ' ' + bgDong : '') + ' <span>' + p.n + '개 단지</span></h3>' + story +
+      '<div class="tl3">' +
+      '<div class="tl3c"><div class="tl3h">과거 · 언제 지었나</div>' +
+        '<div class="tl3m">지은 연대별 단지 수 <span>· 굵은 숫자 = 그 단지들의 지금 평당가</span></div>' + decBars +
+        (note.history ? '<div class="tl3n">' + firstSentence(note.history) + '</div>' : '') + '</div>' +
+      '<div class="tl3c"><div class="tl3h">지금 · 얼마인가</div>' +
+        '<div class="tiles t2">' + tile(p.ppyMid.toLocaleString() + '만', '평당가 중앙값') +
+          tile(trMid == null ? '-' : (trMid > 0 ? '+' : '') + trMid.toFixed(1) + '%', '최근 1년 시세 (중앙값)') + '</div>' +
+        (upPct == null ? '' : '<div class="tl3m">거래 단지 중 <b>' + upPct + '%</b>가 올랐어요</div>') +
+        (vsGu != null ? '<div class="tl3m">' + bgGu + ' 전체보다 평당가 <b>' + (vsGu > 0 ? '+' : '') + vsGu + '%</b></div>'
+          : '<div class="tl3m">동별 평당가</div>' + hbars(dongRows, v => v.toLocaleString() + '만')) + '</div>' +
+      '<div class="tl3c fut"><div class="tl3h">앞으로 · 어떻게 바뀌나 (추정)</div>' +
+        '<div class="tl3m">재건축 연한(30년) 넘는 단지</div>' +
+        '<div class="hbars">' + gauge('지금', oldNow) + gauge('10년 뒤', old10) + '</div>' +
+        (rbs.length ? '<div class="tl3m">재건축 추진 <b>' + rbs.length + '곳</b> · ' +
+          [...new Set(rbs.map(x => x.rb[0]))].slice(0, 3).join(', ') + '</div>' : '') +
+        '<div class="tl3n strong">' + futMsg + '</div>' +
+        (note.future ? '<div class="tl3n">' + firstSentence(note.future) + '</div>' : '') + '</div>' +
+      '</div>' +
+      ((note.history || note.future || note.caution || (note.local && note.local.length)) ?
+        '<details class="fold"><summary>동네 이야기 자세히</summary>' +
+        (note.history ? '<b>어떻게 지금 모습이 됐나</b><p>' + note.history + '</p>' : '') +
+        (note.future ? '<b>앞으로 어떻게 바뀌나</b><p>' + note.future + '</p>' : '') +
+        (note.caution ? '<b>집 사기 전 꼭 알아야 할 것</b><p>' + note.caution + '</p>' : '') +
+        (note.local && note.local.length ? '<b>여기 살아본 사람 이야기</b><ul class="localnote">' +
+          note.local.map(t => '<li>' + t + '</li>').join('') + '</ul>' : '') + '</details>' : '') +
+      '</section>';
+    html += '<p class="note">과거·지금은 최근 1년 실거래와 준공연도로 계산했고, 앞으로는 준공연도로 추정한 것이에요. 개발 계획은 자주 바뀌니 계약 전 직접 확인하세요.</p>';
     box.innerHTML = html;
   }
   window.renderBg = renderBg;
