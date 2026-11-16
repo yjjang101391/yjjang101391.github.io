@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>우리 집 찾기 · 상황별 아파트 추천</title>
-<script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=cef21ca0265743bdadf9483a286d7da6&autoload=false"></script>
+<script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=cef21ca0265743bdadf9483a286d7da6&libraries=services&autoload=false"></script>
 <style>
   :root{
     --bg:#faf9f7; --card:#ffffff; --text:#2b2a28; --muted:#6b6a66;
@@ -540,6 +540,19 @@
   .qres button:hover{background:var(--head)}
   .al{font-size:12px;font-weight:500;color:var(--accent);margin-left:4px}
   .pinnote{font-size:12px;color:var(--accent);margin-top:4px}
+  /* 직장 기준 (2026-11-16) */
+  .workbox{margin-top:10px;padding-top:10px;border-top:1px dashed var(--border)}
+  .workbox .wl{font-size:13.5px;font-weight:600;margin-bottom:6px}
+  .workbox .wl .opt{font-weight:400;color:var(--muted);font-size:12px}
+  .wrow{display:flex;gap:6px;flex-wrap:wrap}
+  .wrow input{flex:1 1 180px;min-width:0;padding:8px 10px;border:1px solid var(--border);border-radius:8px;background:var(--card);color:var(--text);font-size:14px}
+  .wbtn{padding:8px 12px;border:1px solid var(--border);border-radius:8px;background:var(--card);color:var(--text);cursor:pointer;font-size:13px;white-space:nowrap}
+  .wres{display:flex;flex-direction:column;gap:4px;margin-top:6px}
+  .wres:empty,.wsel:empty{display:none}
+  .wopt{text-align:left;padding:7px 10px;border:1px solid var(--border);border-radius:8px;background:var(--card);color:var(--text);cursor:pointer;font-size:13px}
+  .wopt:hover{border-color:var(--accent)}
+  .wsel{margin-top:8px;font-size:13px;line-height:1.5}
+  #chipWorkR{margin-top:6px;align-items:center}
 </style>
 </head>
 <body>
@@ -564,6 +577,14 @@
         <div class="fld"><label for="dong">동</label><select id="dong"></select></div>
       </div>
       <p class="subhint" id="scopeHint" style="margin:8px 0 0"></p>
+      <div class="workbox">
+        <div class="wl">🏢 직장(자주 가는 곳)이 있나요? <span class="opt">넣으면 가까운 곳 위주로 보여 드려요</span></div>
+        <div class="wrow"><input id="workQ" type="search" placeholder="예: 판교역, 회사 이름, 주소" autocomplete="off">
+          <button type="button" class="wbtn" id="workGo">찾기</button><button type="button" class="wbtn" onclick="workPick()">지도에서 찍기</button></div>
+        <div id="workRes" class="wres"></div>
+        <div id="workSel" class="wsel"></div>
+        <div class="chips" id="chipWorkR" style="display:none"></div>
+      </div>
     </div>
     <div class="step" id="st2">
       <div class="sh"><span class="sn">2</span>어떤 상황이세요? <span class="opt">고르면 더 정확해요</span></div>
@@ -641,7 +662,7 @@
   <details class="sect" id="sec-score"><summary>📏 점수 기준 <span>어떻게 순위를 매기나</span></summary>
     <div class="doc">
       <b>이렇게 골라요</b>
-      <ol class="steps"><li><strong>꼭 필요한 조건</strong>으로 거르고</li><li><strong>9개 항목 점수</strong>로 순위를 매기고</li><li><strong>카드에 붙는 표시</strong>로 한 번 더 확인해요</li></ol>
+      <ol class="steps"><li><strong>꼭 필요한 조건</strong>으로 거르고</li><li><strong>항목별 점수</strong>로 순위를 매기고</li><li><strong>카드에 붙는 표시</strong>로 한 번 더 확인해요</li></ol>
       <b>꼭 필요한 조건 (안 맞으면 목록에서 빠져요)</b>
       <table class="gutab sc"><tbody>
         <tr><th>1인 가구 · 신혼</th><td>지하철역 걸어서 20분 (1km)</td></tr>
@@ -660,7 +681,9 @@
         <tr><th>생활편의</th><td>음식점·카페 수(1km) + 대형마트·슈퍼 거리</td><td>수는 많을수록 · 마트 5분 → 20분</td></tr>
         <tr><th>여가</th><td>1인·신혼 문화·헬스 시설 수 + 문화센터 · 영유아·초등 도서관 + 문화센터 · 중·고 도서관 · 시니어 복지관 + 문화센터</td><td>수는 많을수록 · 거리 5분 → 20분</td></tr>
         <tr><th>연식·규모</th><td>연식 + 세대수 (차 있으면 주차)</td><td>신축 → 30년 · 세대수 많을수록 (정보 없으면 0점)</td></tr>
-        <tr><th>시세 수준</th><td>같은 시·구 안 평당가 순위</td><td>비쌀수록 높음 · 기본 중요도 3</td></tr>
+        <tr><th>시세 수준</th><td>같은 시·구 안 평당가 순위</td><td>비쌀수록 높음 · 기본 중요도 3 (신혼 6)</td></tr>
+        <tr><th>주변 환경</th><td>유흥·단란주점·모텔·여관(200m 안, 500m 안에 많이 몰리면 추가) · 장례식장·납골당(500m, 병원 장례식장 제외) · 쓰레기 처리시설(1.5km)</td><td>없으면 10점 · 가까울수록 감점 (자녀 가정 중요도 높게)</td></tr>
+        <tr><th>직장 거리</th><td>직장(자주 가는 곳)을 넣었을 때만 · 단지에서 직장까지 직선거리</td><td>1km 만점 → 거리 제한(없으면 20km) 0점 · 기본 중요도 8</td></tr>
       </tbody></table>
       <p class="note" style="margin-top:4px;padding-top:0;border:none">'많을수록'은 앱에 담긴 전체 단지 중 순위예요. 거리는 걷는 사람 기준이라 아이·어르신은 같은 시간이라도 거리가 짧아요.</p>
       <b>카드에 붙는 표시</b>
@@ -679,9 +702,10 @@
 </div>
 
 <div id="webLoading" style="position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:3000;background:#2b2a28;color:#fff;font-size:13px;padding:9px 16px;border-radius:999px;box-shadow:0 3px 12px rgba(0,0,0,.25)">자료를 불러오는 중이에요 (처음 한 번 몇 초 걸려요)</div>
-<script src="data/apt_data_1.js?v=202611091322"></script>
-<script src="data/apt_data_2.js?v=202611091322"></script>
-<script src="data/apt_data_3.js?v=202611091322"></script>
+<script src="data/apt_data_1.js?v=202611161654"></script>
+<script src="data/apt_data_2.js?v=202611161654"></script>
+<script src="data/apt_data_3.js?v=202611161654"></script>
+<script src="data/apt_data_4.js?v=202611161654"></script>
 <script>
   // 단지 데이터 (점수+가격+이름+주소+세대수+좌표 병합)
   //  s=[역세권,교육,공원,상권,병원,즐길거리] 점수, lat/lng=좌표
@@ -697,7 +721,7 @@
     return r;
   })();
   const DATA = _RAW.items;        // 단지 목록
-  const CENTERS = _RAW.centers;   // 법정동별 중심 좌표
+  const CENTERS = _RAW.centers;   // 동별 중심 좌표 (키 '구|동')
   const GCENTERS = _RAW.gcenters || {};  // 구별 중심 좌표
   const MONTHS = _RAW.months;     // 월별 실거래 차트의 월 라벨 (YYYYMM)
   const NOTES = _RAW.notes || {}; // 구별 수동 원고 (역사·호재·로컬 노트)
@@ -705,7 +729,7 @@
   // ── 상황별 추천 (설계안 v0.4 · B7) — AI 생성 ─────────────────────────
   // 축 8개. 같은 축도 상황마다 재는 지표가 다르다 (PERSONAS의 comp).
   // 계산 결과는 단지마다 x._ax(축 점수 8개, 자료 없으면 undefined)와 x._gate(필수조건 판정)에 둔다.
-  const DIMS = [["교통",0],["교육",1],["보육",2],["의료",3],["공원",4],["생활편의",5],["여가",6],["연식·규모",7],["시세 수준",8]];
+  const DIMS = [["교통",0],["교육",1],["보육",2],["의료",3],["공원",4],["생활편의",5],["여가",6],["연식·규모",7],["시세 수준",8],["주변 환경",9],["직장 거리",10]];
   const DEFAULT_W = 5, TOP_N = 40, NOW_YEAR = 2026;
   let topN = TOP_N, topSig = '';    // 목록에 보이는 개수: '더 보기'로 40곳씩 늘리고, 조건이 바뀌면 처음으로
   // 걸음 속도(m/분)·우회계수 [확정 D2]. 직선거리 = 걷는 분 × 속도 ÷ 1.4
@@ -794,10 +818,39 @@
   // 지표 하나 → 0~100점. c = [키, 비중, 방식, a, b]
   //  방식 "A"/"C"/"S" = 그 걸음으로 a분 만점·b분 0점 / "abs" = a m 만점·b m 0점 / "pct" = 백분위 / "age" = 연식
   //       "up" = 값이 클수록 좋음 (a 이하 0점 ~ b 이상 100점, 주차·엘리베이터)
+  // 주변 환경 (2026-11-13): 유해시설이 없으면 100, 가까울수록 감점.
+  //  x.nz = {u: 유흥주점, m: 모텔·여관, f: 장례식장·납골당, w: 쓰레기 처리시설} 각 [반경 안 개수, 가장 가까운 거리m]
+  //  [키, 이름, [[이 거리 안이면, 감점], ...], [반경 안에 이 개수 넘게 몰려 있으면, 추가 감점]]
+  //  영등포 시험(2026-11-13): 500m 기준이면 단지 80%가 감점돼 변별력이 없어 200m로 좁히고, 몰림은 따로 감점
+  const NZ = [["u", "유흥·단란주점", [[100, 35], [200, 20]], [10, 10]], ["m", "모텔·여관", [[100, 25], [200, 12]], [8, 8]],
+              ["f", "장례식장", [[300, 25], [500, 10]], null], ["w", "쓰레기 처리시설", [[500, 40], [1000, 25], [1500, 10]], null]];
+  function envScore(x){
+    if(!x.nz) return undefined;
+    let pen = 0;
+    NZ.forEach(([k, , steps, many]) => {
+      const v = x.nz[k];
+      if(!v || v[1] == null) return;
+      const s = steps.find(t => v[1] <= t[0]);
+      if(s) pen += s[1];
+      if(many && v[0] > many[0]) pen += many[1];
+    });
+    return Math.max(0, 100 - pen);
+  }
+  const NZ_R = { u: "500m", m: "500m", f: "1km", w: "1.5km" };   // 15_nuisance.py 검색 반경 (개수 기준)
+  function envTxt(x){
+    if(!x.nz) return '아직 조사 전 (중간값으로 계산)';
+    const t = NZ.filter(([k]) => x.nz[k] && x.nz[k][1] != null)
+      .map(([k, nm]) => nm + ' ' + x.nz[k][1].toLocaleString() + 'm' + (x.nz[k][0] > 1 ? ' (' + NZ_R[k] + ' 안 ' + x.nz[k][0] + '곳)' : ''));
+    return t.length ? t.join(' · ') : '가까이 없음';
+  }
+  // 아직 조사 안 된 단지는 조사된 단지들의 중간값으로 (빠뜨리면 조사된 지역만 점수가 달라져 불공평, 2026-11-13 검증)
+  const ENV_FILL = (() => { const v = DATA.filter(x => x.nz).map(envScore).sort((a, b) => a - b); return v.length ? v[Math.floor(v.length / 2)] : undefined; })();
   function indScore(x, c){
     const [k, , kind, a, b] = c;
     if(kind === "pct") return x._p[k];
+    if(kind === "env") return x.nz ? envScore(x) : ENV_FILL;
     if(kind === "age") return ageScore(x);
+    if(kind === "work") return workScore(x);
     const v = VAL[k](x);
     if(v === undefined) return undefined;
     if(v === null) return 0;
@@ -818,29 +871,29 @@
     [D("p2", 1, "A")], [P("com", 6), D("mt", 4, "A")], [P("uc", 4), P("gym", 3), D("cul", 3, "A")], [AGE(6), P("sed", 4)], [P("mkt", 1)],
   ];
   const PERSONAS = [
-    { id: "solo", name: "1인 가구", w: [10,0,0,4,4,9,7,5,3], comp: SOLO_COMP,
+    { id: "solo", name: "1인 가구", w: [10,0,0,4,4,9,7,5,3,3], comp: SOLO_COMP,
       gates: [{ k: "rd", who: "A", min: 20, label: "지하철역" }] },
-    { id: "newlywed", name: "신혼", w: [8,3,3,3,6,7,2,9,6],      // v0.5.8: 맞벌이 2인 + 곧 아이 + 첫 집(자산)
+    { id: "newlywed", name: "신혼", w: [8,3,3,3,6,7,2,9,6,5],      // v0.5.8: 맞벌이 2인 + 곧 아이 + 첫 집(자산)
       comp: [[D("rt",1,"A",20)], [D("e1",1,"C",15)], [D("care",6,"C",10), P("careN",4)],
              [D("im",7,"A"), D("ped",3,"A")], [D("p2",1,"A")], [D("mt",6,"A"), P("com",4)],
              [P("uc",4), P("gym",3), D("cul",3,"A")], [P("sed",5), AGE(5)], [P("mkt",1)]],
       gates: [{ k: "rd", who: "A", min: 20, label: "지하철역" }] },
-    { id: "baby", name: "영유아", child: true, w: [6,3,10,9,8,6,2,7,3],
+    { id: "baby", name: "영유아", child: true, w: [6,3,10,9,8,6,2,7,3,8],
       comp: [[D("rt",1,"A")], [D("e1",1,"C",15)], [D("care",6,"C",10), P("careN",4)],
              [D("ped",6,"C"), P("hc",2), D("ph",2,"C")], [D("p2",7,"C"), D("pd",3,"C")], [D("mt",7,"A"), P("com",3)],
              [D("lib",6,"C"), D("cul",4,"C")], [P("sed",6), AGE(4)], [P("mkt",1)]],
       gates: [{ k: "care", who: "C", min: 10, label: "어린이집·유치원" },
               { k: "ped", who: "C", min: 20, label: "소아청소년과" }] },
-    { id: "elem", name: "초등 자녀", child: true, w: [6,10,0,5,7,5,3,6,3],
+    { id: "elem", name: "초등 자녀", child: true, w: [6,10,0,5,7,5,3,6,3,9],
       comp: [[D("rt",1,"A")], [D("e1",7,"C",15), P("ac",3)], [D("care",1,"C",10)],
              [D("ped",4,"C"), P("hc",6)], [D("p2",7,"C"), D("pd",3,"C")], [P("com",5), D("mt",5,"A")],
              [D("lib",7,"C"), D("cul",3,"C")], [P("sed",5), AGE(5)], [P("mkt",1)]],
       gates: [{ k: "e1", who: "C", min: 15, label: "배정 초등학교" }] },
-    { id: "teen", name: "중·고 자녀", child: true, w: [6,10,0,3,3,4,2,5,3],
+    { id: "teen", name: "중·고 자녀", child: true, w: [6,10,0,3,3,4,2,5,3,7],
       comp: [[D("rt",1,"A")], [P("ec",6), D("md",2.5,"A"), D("hd",1.5,"A")], [D("care",1,"C",10)],
              [P("hc",1)], [D("p2",1,"A")], [P("com",1)], [D("lib",1,"A")], [AGE(5), P("sed",5)], [P("mkt",1)]],
       gates: [] },
-    { id: "senior", name: "시니어", w: [6,0,0,10,9,8,5,5,3],
+    { id: "senior", name: "시니어", w: [6,0,0,10,9,8,5,5,3,5],
       comp: [[D("rt",1,"S")], [D("e1",1,"C",15)], [D("care",1,"C",10)],
              [D("im",4,"S",15), ["gh",2.5,"abs",2000,8000], D("ph",1.5,"S",15), P("hc",2)],
              [D("p2",1,"S")], [D("mt",6,"S"), P("com",4)], [D("wf",6,"S"), D("cul",2,"S"), P("uc",2)],
@@ -850,9 +903,116 @@
               { k: "elev1", label: "엘리베이터" }] },
   ];
   // 상황을 고르지 않았을 때: 필수조건 없이 모든 항목 5
-  const NEUTRAL = { id: "", name: "", w: [5,5,5,5,5,5,5,5,3], gates: [],
+  const NEUTRAL = { id: "", name: "", w: [5,5,5,5,5,5,5,5,3,5], gates: [],
     comp: [[D("rt",1,"A")], [D("e1",5,"C",15), P("ec",5)], [D("care",1,"C",10)], [P("hc",1)],
            [D("p2",1,"A")], [P("com",7), D("mt",3,"A")], [P("uc",7), D("cul",3,"A")], [AGE(6), P("sed",4)], [P("mkt",1)]] };
+  PERSONAS.concat([NEUTRAL]).forEach(p => p.comp.push([["env", 1, "env"]]));   // 10번째 항목 '주변 환경' (모든 상황 같은 지표)
+  PERSONAS.concat([NEUTRAL]).forEach(p => { p.comp.push([["work", 1, "work"]]); p.w.push(0); });   // 11번째 항목 '직장 거리' (중요도는 baseWeights에서)
+  // ── 직장 기준 (2026-11-16) — AI 생성 ─────────────────────────────
+  // 처음 가는 지역은 대개 직장 때문에 간다 → 직장(자주 가는 곳)을 고르면
+  //  ① 11번째 항목 '직장 거리' 점수 (직선 1km 만점 → 거리 제한 km, 제한이 없으면 20km에서 0점) · 기본 중요도 8
+  //  ② 거리 제한(기본 10km) 밖 단지는 목록에서 뺀다 (동네 이름을 몰라도 직장 주변만 보이게)
+  // 실제 출퇴근 시간(길·노선)은 무료로 계산할 방법이 없어 직선거리만 쓴다
+  let WORK = null, workR = 10;                     // WORK = { lat, lng, n }, workR = 거리 제한 km (0 = 제한 없음)
+  const WORK_W = 8, WORK_RS = [5, 10, 20, 30, 0];
+  function setWorkDist(){
+    DATA.forEach(x => { x._wk = (WORK && x.lat != null) ? Math.round(distM(x.lat, x.lng, WORK.lat, WORK.lng) / 100) / 10 : undefined; });
+  }
+  function inWorkR(x){ return !WORK || !workR || (x._wk != null && x._wk <= workR); }
+  function kmTxt(x){ return x._wk == null ? '위치 자료 없음' : '직선 ' + x._wk.toFixed(1) + 'km'; }
+  function workScore(x){
+    if(!WORK || x._wk == null) return undefined;
+    const zero = workR || 20;
+    return x._wk <= 1 ? 100 : x._wk >= zero ? 0 : 100 * (zero - x._wk) / (zero - 1);
+  }
+  function buildWork(){
+    const s = document.getElementById("workSel"), rb = document.getElementById("chipWorkR");
+    if(!s || !rb) return;
+    s.innerHTML = WORK ? '🏢 <b>' + esc(WORK.n) + '</b> 기준으로 골라요 <button class="linkbtn" onclick="clearWork()">지우기</button>' +
+      '<div class="mut">직선거리예요. 실제 출퇴근 시간은 길·노선에 따라 더 걸려요.</div>' : '';
+    rb.style.display = WORK ? '' : 'none';
+    rb.innerHTML = WORK ? '<span class="ol">거리 제한</span>' + WORK_RS.map(r => '<button class="chip' + (r === workR ? ' on' : '') + '" data-wr="' + r + '">' +
+      (r ? r + 'km 안' : '제한 없음') + '</button>').join('') : '';
+  }
+  function setWork(w){
+    WORK = w; setWorkDist();
+    const inp = document.querySelector('#sliders input[data-idx="10"]');
+    if(inp){ inp.value = WORK ? WORK_W : 0; inp.parentNode.querySelector(".val").textContent = inp.value; }
+    document.getElementById("workRes").innerHTML = '';
+    buildWork();
+    if(WORK){ mapScope = false; savedView = null; moveMap([WORK.lat, WORK.lng], false); }
+    expanded = -1; render(false);
+  }
+  window.clearWork = function(){ setWork(null); };
+  let workList = [], workPicking = false, workPickBound = false;
+  // 찾기: 카카오 장소 검색(이름) → 없으면 주소 검색. 앱에 담긴 동·단지 이름도 함께 (카카오 검색이 없는 화면에서도 쓰게)
+  function workSearch(){
+    const q = document.getElementById("workQ").value.trim(), res = document.getElementById("workRes");
+    workPicking = false;
+    if(!q){ res.innerHTML = ''; return; }
+    const nq = q.replace(/\s/g, ''), local = [];
+    if(nq.length >= 2){
+      Object.keys(CENTERS).forEach(k => {
+        const [g, d] = k.split('|');
+        if(d && d.includes(nq) && local.length < 3) local.push({ n: d + ' (' + g + ')', a: '동 중심', lat: CENTERS[k][0], lng: CENTERS[k][1] });
+      });
+      DATA.forEach(x => {
+        if(x.lat != null && local.length < 6 && x.n.replace(/\s/g, '').includes(nq)) local.push({ n: x.n, a: x.g + ' ' + x.d + ' 아파트', lat: x.lat, lng: x.lng });
+      });
+    }
+    const show = (list, note) => {
+      workList = list.slice(0, 8);
+      res.innerHTML = (workList.length
+        ? workList.map((o, i) => '<button type="button" class="wopt" data-wi="' + i + '"><b>' + esc(o.n) + '</b> <span class="mut">' + esc(o.a || '') + '</span></button>').join('')
+        : '<div class="mut">찾는 곳이 없어요. 다른 이름·주소로 찾거나 \'지도에서 찍기\'를 써 보세요.</div>') +
+        (note ? '<div class="mut">' + note + '</div>' : '');
+    };
+    const svc = typeof kakao !== "undefined" && kakao.maps && kakao.maps.services;
+    if(!svc){ show(local, '이 화면에서는 장소 검색이 안 돼 동·단지 이름만 찾아요. 회사 위치는 \'지도에서 찍기\'로 정해 주세요.'); return; }
+    res.innerHTML = '<div class="mut">찾는 중…</div>';
+    const S = kakao.maps.services.Status;
+    new kakao.maps.services.Places().keywordSearch(q, (data, st) => {
+      if(st === S.OK) return show(data.slice(0, 6).map(d => ({ n: d.place_name, a: d.road_address_name || d.address_name, lat: +d.y, lng: +d.x })).concat(local));
+      new kakao.maps.services.Geocoder().addressSearch(q, (d2, st2) => {      // 장소 이름으로 없으면 주소로
+        if(st2 === S.OK) return show(d2.slice(0, 5).map(d => ({ n: d.address_name, a: '주소', lat: +d.y, lng: +d.x })).concat(local));
+        show(local, st === S.ERROR ? '장소 검색이 지금 안 돼요. \'지도에서 찍기\'로 정해 주세요.' : '');
+      });
+    });
+  }
+  // 지도에서 찍기: 다음 지도 클릭 한 번을 직장 위치로 (카카오·오픈스트리트맵 공통)
+  window.workPick = function(){
+    const res = document.getElementById("workRes");
+    if(!map){ res.innerHTML = '<div class="mut">지도가 없는 화면이에요. 이름이나 주소로 찾아 주세요.</div>'; return; }
+    workPicking = true;
+    res.innerHTML = '<div class="mut">지도에서 직장 위치를 눌러 주세요 · <button class="linkbtn" onclick="workPickCancel()">취소</button></div>';
+    if(!workPickBound){
+      workPickBound = true;
+      const on = (lat, lng) => {
+        if(!workPicking) return;
+        workPicking = false;
+        if(document.body.classList.contains("mapopen")) toggleMapView();   // 휴대폰: 지도를 닫고 목록으로
+        setWork({ lat, lng, n: '지도에서 고른 곳' });
+      };
+      if(typeof L !== "undefined" && map.on) map.on("click", e => on(e.latlng.lat, e.latlng.lng));
+      else kakao.maps.event.addListener(map, "click", e => on(e.latLng.getLat(), e.latLng.getLng()));
+    }
+    if(!document.getElementById("map").offsetWidth) toggleMapView();     // 휴대폰: 지도 열기
+  };
+  window.workPickCancel = function(){ workPicking = false; document.getElementById("workRes").innerHTML = ''; };
+  document.getElementById("workGo").addEventListener("click", workSearch);
+  document.getElementById("workQ").addEventListener("keydown", e => { if(e.key === "Enter"){ e.preventDefault(); workSearch(); } });
+  document.getElementById("workRes").addEventListener("click", e => {
+    const b = e.target.closest(".wopt");
+    if(!b) return;
+    const o = workList[+b.dataset.wi];
+    if(o) setWork({ lat: o.lat, lng: o.lng, n: o.n });
+  });
+  document.getElementById("chipWorkR").addEventListener("click", e => {
+    const b = e.target.closest(".chip");
+    if(!b) return;
+    workR = +b.dataset.wr; setWorkDist(); buildWork();
+    expanded = -1; render(false);
+  });
 
   let sel = [];                       // 고른 상황 id (자녀 단계끼리는 여러 개)
   const opt = { car: false, newbuild: false, big: false, baby: false };   // 추가 조건
@@ -876,7 +1036,7 @@
   // 상황 중요도 + 추가 조건 (여러 상황이면 축마다 큰 값)
   function baseWeights(){
     const ps = personas();
-    const w = DIMS.map((_, i) => Math.max(...ps.map(p => p.w[i])));
+    const w = DIMS.map((_, i) => i === 10 ? (WORK ? WORK_W : 0) : Math.max(...ps.map(p => p.w[i])));   // 직장 거리: 직장을 넣었을 때만
     if(sel.includes("newlywed") && opt.baby){ w[1] = Math.max(w[1], 6); w[2] = Math.max(w[2], 6); }
     if(opt.newbuild) w[7] = Math.min(10, w[7] + 3);
     return w;
@@ -939,9 +1099,12 @@
     ax(3, '의료 약함 · ' + (has('senior') ? '내과 ' + distOrNone(VAL.im(x), 'S')
                          : has('baby') ? '소아과 ' + distOrNone(VAL.ped(x), 'C')
                          : (has('solo') || has('newlywed')) ? '내과 ' + distOrNone(VAL.im(x), 'A') : '병원 ' + x.hc + '곳'));
-    ax(4, '공원 약함 · 공원 ' + (x.pd == null ? '2km 안에 없음' : x.pd.toLocaleString() + 'm'));
+    ax(4, '공원 약함 · ' + (x.p2 ? '근린공원 ' + (x.p2[0] == null ? '가까이 없음' : x.p2[0].toLocaleString() + 'm')
+                                : '공원 ' + (x.pd == null ? '2km 안에 없음' : x.pd.toLocaleString() + 'm')));
     ax(5, '생활편의 약함 · 음식점·카페 ' + (x.fc + x.cc) + '곳');
     ax(6, '여가 약함');
+    if(w[9] > 0 && x.nz && envScore(x) < 70) out.push('주변 유해시설 · ' + envTxt(x));
+    if(WORK && w[10] >= 7 && x._ax[10] !== undefined && x._ax[10] < 40) out.push('직장이 멀어요 · ' + kmTxt(x));
     ax(7, '연식·규모 약함 · ' + (x.y ? x.y + '년 준공' : '준공년도 미상') + (x.sed != null ? ' · ' + x.sed.toLocaleString() + '세대' : ''));
     if(has('solo') || has('newlywed')){
       const mt = VAL.mt(x);
@@ -1196,7 +1359,7 @@
   function updateHint(){
     const el = document.getElementById("personaHint");
     if(!el) return;
-    const w = getWeights(), items = DIMS.map(([nm, i]) => ({ nm, v: w[i] }));
+    const w = getWeights(), items = DIMS.filter(([nm, i]) => i !== 10 || WORK).map(([nm, i]) => ({ nm, v: w[i] }));
     const hi = items.filter(d => d.v >= 6).sort((a, b) => b.v - a.v).slice(0, 3);
     const lo = items.filter(d => d.v <= 3).sort((a, b) => a.v - b.v).slice(0, 3);
     const child = sel.some(id => PERSONAS.find(p => p.id === id).child);
@@ -1253,7 +1416,7 @@
           : '지금 범위의 단지는 모두 이 조건에 맞아요') +
         (nUnknown ? ' · 자료가 없어 확인이 필요한 ' + nUnknown + '곳은 뒤쪽에 있어요' : '') + '</div>';
     }
-    const miss = DIMS.filter(([nm, i]) => w[i] > 0 && DATA.every(x => x._ax[i] === undefined)).map(d => d[0]);
+    const miss = DIMS.filter(([nm, i]) => i !== 10 && w[i] > 0 && DATA.every(x => x._ax[i] === undefined)).map(d => d[0]);
     if(miss.length) h += '<div class="gn">자료 준비 중: ' + miss.join('·') + '</div>';
     if(weightsTouched && sel.length)
       h += '<div class="gn">중요도를 직접 바꿨어요 · <button class="linkbtn" onclick="resetWeights()">원래대로</button></div>';
@@ -1345,6 +1508,7 @@
     return eok + "억 " + man.toLocaleString() + "만";
   }
   function eok1(m){ return (m/10000).toFixed(1); }
+  function eokRng(a, b){ return eok1(a) === eok1(b) ? eok1(a) : eok1(a) + '~' + eok1(b); }
   function distTxt(d){ return d == null ? "2km 내 없음" : d.toLocaleString() + "m"; }
   // 내부 점수는 0~100이지만 화면에는 슬라이더와 같은 0~10 단위로 보여준다
   function s10(v){ return v == null ? "-" : (v / 10).toFixed(1); }
@@ -1378,7 +1542,9 @@
     ["생활편의 최상", "생활이 편해요"],
     ["여가 최상", "여가 시설이 많아요"],
     ["", ""],   // '단지'는 아래 complexBadge()에서 실제 연식·세대수로 문구를 정함
-    ["시장 평가 최상", "시장에서 인정받는 단지"],
+    ["시세 수준 최상", "이 지역에서 시세가 높은 단지"],
+    ["", ""],   // 주변 환경 (배지로 쓰지 않음)
+    ["직장 아주 가까움", "직장이 가까워요"],   // 직장 거리 (2026-11-16)
   ];
   // 단지 배지 문구: 점수만 보고 '신축'이라고 쓰면 오래된 대단지가 신축으로 표시되므로
   // 준공년도와 세대수를 직접 보고 정한다.
@@ -1398,7 +1564,7 @@
     if(x._stable >= 0.7) out.push('<span class="badge good" title="중요도를 이리저리 바꿔도 계속 10위 안에 드는 곳">안정 추천</span>');
     if(x._val === "cheap") out.push('<span class="badge" title="같은 지역에서 점수가 비슷한 단지들보다 값이 많이 싼 곳">점수 대비 저렴</span>');
     const cand = DIMS.map(([nm, i]) => ({ i, v: x._ax[i], w: w[i] }))
-      .filter(c => c.w > 0 && c.v >= 75)
+      .filter(c => c.i !== 9 && c.w > 0 && c.v >= 75)   // 주변 환경은 대부분 만점이라 배지로 안 씀
       .sort((a, b) => (b.v * b.w) - (a.v * a.w));
     cand.slice(0, 2).forEach(c => {
       const txt = (c.i === 7) ? complexBadge(x, c.v) : BADGE_TEXT[c.i][c.v >= 90 ? 0 : 1];
@@ -1444,6 +1610,7 @@
     let pool = DATA;
     if(gu) pool = pool.filter(x => inRegion(x, gu));
     if(dong) pool = pool.filter(x => x.d === dong);
+    pool = pool.filter(inWorkR);                               // 직장 거리 제한
     pool = pool.filter(x => fitComplex(x, f));
     if(scoped() && !noBounds) pool = pool.filter(x => x.lat != null && inBounds(x));
     if(fActive(f)) pool = pool.filter(x => matchPys(x, f).length > 0);
@@ -1467,6 +1634,11 @@
         if(n > now && (!best || n > best.n)) best = { i, n };
       });
       if(best) tips.push(AREA_BANDS[best.i][0] + '도 같이 보면 <b>' + (best.n - now) + '개</b>가 더 나와요');
+    }
+    if(WORK && workR && tips.length < 2){                  // 직장 거리 제한을 한 단계 넓히면
+      const nx = WORK_RS.find(r => r > workR) || 0, save = workR;
+      workR = nx; const n = countWith(f, dong, gu); workR = save;
+      if(n > now) tips.push((nx ? '직장 거리 제한을 ' + nx + 'km로 넓히면' : '직장 거리 제한을 없애면') + ' <b>' + (n - now) + '개</b>가 더 나와요');
     }
     if(dong && tips.length < 2){
       const n = countWith(f, "", gu);
@@ -1651,6 +1823,10 @@
       bounds.extend(new kakao.maps.LatLng(x.lat, x.lng));
       cnt++;
     });
+    if(WORK){                                      // 직장 위치
+      makeDot(WORK.lat, WORK.lng, "#111827", 16, "직장 · " + String(WORK.n).replace(/[<>&"]/g, ''));
+      makeLabel(WORK.lat, WORK.lng, "🏢 직장", true);
+    }
     // 전체 보기에서는 지도를 자동으로 움직이지 않는다(사용자 조작·지역 선택만 반영).
   }
 
@@ -1873,10 +2049,10 @@
       return Math.max(1, Math.ceil((has.filter(o => o._ax[d.i] > v + 0.05).length + 1) / has.length * 100));
     };
     const picked = DIMS.map(([nm, i]) => ({ nm, i, w: w[i] }))
-      .filter(d => d.w > 0).sort((a, b) => b.w - a.w).slice(0, 4)
-      .map(d => Object.assign(d, { pr: rankOf(d) })).filter(d => d.pr <= 30).slice(0, 2);
+      .filter(d => d.w > 0 && d.i !== 9).sort((a, b) => b.w - a.w).slice(0, 4)   // 주변 환경은 대부분 만점 동점이라 제외
+      .map(d => Object.assign(d, { pr: rankOf(d) })).filter(d => d.pr <= 30 && (d.i !== 10 || x._ax[10] >= 60)).slice(0, 2);   // 직장은 가까울 때만 이유로
     if(!picked.length && !gatesNow().length) return '';
-    const lines = picked.map(d => d.nm + ' ' + s10(x._ax[d.i]) + ' (상위 ' + d.pr + '%)').join(' · ');
+    const lines = picked.map(d => d.i === 10 ? '직장까지 ' + kmTxt(x) : d.nm + ' ' + s10(x._ax[d.i]) + ' (상위 ' + d.pr + '%)').join(' · ');
     const gline = !gatesNow().length ? '' : ' · 꼭 필요한 조건 ' +
       (x._gate === "pass" ? '맞음' : x._gate === "unknown" ? '확인 필요 (' + x._gateUnknown.join('·') + ' 자료 없음)' : '안 맞음 (' + x._gateFail.join('·') + ')');
     return '<div class="why"><b>추천 이유</b> ' + (lines || '꼭 필요한 조건 기준으로 골랐어요') + gline + '</div>';
@@ -1904,7 +2080,7 @@
     const pyRowHTML = (p, mode) => {
       const fit = (dealMode === mode && fActive(f) && fitPy(p, f)) ? ' class="fit"' : '';
       return '<tr' + fit + '><td>' + p[1] + '㎡ <span class="mut">(약 ' + pyg(p[1]) + '평형)</span></td><td>' + won(p[2]) +
-        '</td><td>' + eok1(p[3]) + '~' + eok1(p[4]) + '억</td><td>' + p[5] + '건</td></tr>';
+        '</td><td>' + eokRng(p[3], p[4]) + '억</td><td>' + p[5] + '건</td></tr>';
     };
     const jeonseTab = (x.jp && x.jp.length) ? '<div class="dsec-title">평형별 전세 (신규 계약)</div>' +
       '<table class="pytab"><thead><tr><th>전용면적 (평형)</th><th>전세 중앙값</th><th>범위</th><th>거래</th></tr></thead><tbody>' +
@@ -1912,7 +2088,7 @@
     const py = x.py.map(p => {
       const fit = (dealMode === "sale" && fActive(f) && fitPy(p, f)) ? ' class="fit"' : '';
       return '<tr' + fit + '><td>' + p[1] + '㎡ <span class="mut">(약 ' + pyg(p[1]) + '평형)</span></td><td>' + won(p[2]) +
-        '</td><td>' + eok1(p[3]) + '~' + eok1(p[4]) + '억</td><td>' + p[5] + '건</td></tr>';
+        '</td><td>' + eokRng(p[3], p[4]) + '억</td><td>' + p[5] + '건</td></tr>';
     }).join('');
     const sedTxt = x.sed != null ? (x.sed.toLocaleString() + '세대') : '정보 없음';
 
@@ -1999,6 +2175,7 @@
             .map(([t, k]) => t + ' ' + (x.x[k] && x.x[k][0] != null ? x.x[k][0].toLocaleString() + 'm' : '없음')).join(' · ') +
           '</span></div>' : '') +
         '<div class="dline"><span class="dl">즐길거리</span><span>문화시설 ' + x.uc + '곳</span></div>' +
+        '<div class="dline"><span class="dl">주변 환경</span><span>' + envTxt(x) + '</span></div>' +
         '<div class="dline"><span class="dl">단지</span><span>' + (x.y ? x.y + '년 준공' : '준공년도 미상') +
           ' · ' + (x.sed != null ? x.sed.toLocaleString() + '세대' : '세대수 정보 없음') +
           (x.pk != null ? ' · 세대당 주차 ' + x.pk + '대' : '') + (x.ev != null ? ' · 엘리베이터 ' + x.ev + '대' : '') + '</span></div>' +
@@ -2020,7 +2197,7 @@
     ped: "소아청소년과", im: "내과·가정의학과", gh: "종합병원", ph: "약국", mt: "마트·슈퍼", wf: "복지관", pd: "집 앞 작은 공원",
     p2: "근린공원", cul: "문화센터", lib: "도서관", park: "세대당 주차", elev: "엘리베이터",
     ec: "입시학원 수(1km)", ac: "학원 수(1km)", hc: "병원 수(1km)", com: "음식점·카페 수(1km)", uc: "문화시설 수(1km)",
-    careN: "어린이집 수(500m)", gym: "헬스장·체육관 수(1km)", sed: "세대수", mkt: "같은 시·구 평당가", age: "연식" };
+    careN: "어린이집 수(500m)", gym: "헬스장·체육관 수(1km)", sed: "세대수", mkt: "같은 시·구 평당가", age: "연식", env: "주변 유해시설", work: "직장까지 거리" };
   function whyVal(x, c){
     const [k, , kind, a, b] = c;
     if(kind === "pct"){
@@ -2029,6 +2206,8 @@
         (p == null ? "자료 없음" : "전체 단지 중 상위 " + Math.max(1, Math.round(100 - p)) + "%");
     }
     if(kind === "age") return x.y ? x.y + "년 준공 (신축 만점 · 30년 0점)" : "자료 없음";
+    if(kind === "env") return envTxt(x) + " (없으면 만점 · 가까울수록 감점)";
+    if(kind === "work") return x._wk == null ? "자료 없음" : kmTxt(x) + " (1km 만점 · " + (workR || 20) + "km 0점)";
     if(k === "park") return x.pk == null ? "자료 없음" : "세대당 " + x.pk + "대 (0.5대 0점 · 1.5대 만점)";
     if(k === "elev") return x.ev === undefined ? "자료 없음" : x.ev > 0 ? "있음" : "없음";
     const d = VAL[k](x);
@@ -2057,6 +2236,8 @@
       }).join("\n");
     }).join("\n");
   }
+  // 이름 끝 글자 받침이 있으면 '이', 없으면 '가' (한글이 아니면 '이(가)')
+  function josaIGa(s){ const c = String(s).trim().slice(-1).charCodeAt(0) - 0xAC00; return c < 0 || c > 11171 ? '이(가)' : c % 28 ? '이' : '가'; }
   function compareHTML(w){
     const xs = cmpSel.map(n => BYID.get(n)).filter(Boolean);
     if(xs.length < 2) return '';
@@ -2066,7 +2247,7 @@
     const row = (label, fn, hi) => {
       const vals = xs.map(fn);
       let bestI = -1;
-      if(hi){ const nums = xs.map(hi); bestI = nums.indexOf(Math.max(...nums)); }
+      if(hi){ const nums = xs.map(hi), mx = Math.max(...nums); if(nums.some(n => n !== mx)) bestI = nums.indexOf(mx); }
       return '<tr><th>' + label + '</th>' +
         vals.map((v, i) => '<td' + (i === bestI ? ' class="win"' : '') + '>' + v + '</td>').join('') + '</tr>';
     };
@@ -2074,8 +2255,10 @@
     let body = row('종합', x => mini(tots[xs.indexOf(x)]), x => totalScore(x, w));
     body += '<tr><td colspan="' + (xs.length + 1) + '" style="font-size:11.5px;color:var(--muted);text-align:left">항목 점수를 누르면(PC는 마우스를 올리면) 이유가 보여요</td></tr>';
     DIMS.forEach(([nm, di]) => {               // 중요도 0인 항목은 빼서 표를 짧게
-      if(w[di] > 0) body += row(nm, x => '<span class="cwhy" tabindex="0" data-tip="' +
-        esc(axisWhy(x, di)).replace(/"/g, '&quot;') + '">' + mini(x._ax[di]) + '</span>', x => (x._ax[di] === undefined ? -1 : x._ax[di]));
+      const unk = x => x._ax[di] === undefined || (di === 9 && !x.nz);   // 주변 환경 조사 전 단지는 '조사 전'
+      if(w[di] > 0) body += row(nm, x => unk(x) && di === 9 ? '<span class="mut">조사 전</span>' : '<span class="cwhy" tabindex="0" data-tip="' +
+        esc(axisWhy(x, di)).replace(/"/g, '&quot;') + '">' + mini(x._ax[di]) + '</span>',
+        x => (di === 9 && xs.some(unk) ? 0 : unk(x) ? -1 : x._ax[di]));   // 주변 환경은 조사 전이 섞이면 비교 안 함
     });
     const fNow = getFilters(), cheapM = x => matchPys(x, fNow).sort((a, b) => a[2] - b[2])[0];   // 조건에 맞는 평형 중 가장 싼 것
     body += row(dealMode === "jeonse" ? '조건 평형 전세' : '조건 평형 시세', x => { const p = cheapM(x); return p ? p[1] + '㎡(' + pyg(p[1]) + '평) ' + won(p[2]) : '-'; },
@@ -2090,7 +2273,7 @@
       const bx = xs[best];
       const others = xs.filter((_, i) => i !== best);
       const lead = others.every(o => (bx._ax[top.i] || 0) >= (o._ax[top.i] || 0));
-      verdict = '<div class="verdict"><b>' + esc(bx.n) + '</b>가 지금 기준으로 앞서요'
+      verdict = '<div class="verdict"><b>' + esc(bx.n) + '</b>' + josaIGa(bx.n) + ' 지금 기준으로 앞서요'
         + (lead ? ' — 가장 중요하게 보신 <b>' + top.nm + '</b>에서도 우위예요.' : '.') + '</div>';
     }
     return '<div class="cmpbox">' +
@@ -2103,7 +2286,7 @@
   function ready(f){ return (f.pMin != null || f.pMax != null) && f.areas.length > 0; }
   function stepState(f){
     const set = (id, on) => { const el = document.getElementById(id); if(el) el.classList.toggle("done", on); };
-    set("st1", !!guEl.value || mapScope); set("st2", sel.length > 0);
+    set("st1", !!guEl.value || mapScope || !!WORK); set("st2", sel.length > 0);
     set("st3", f.pMin != null || f.pMax != null); set("st4", f.areas.length > 0);
   }
   function guideHTML(f){
@@ -2129,6 +2312,7 @@
     if(areaSel.length) p.set("a", areaSel.join(","));
     if(dealMode !== "sale") p.set("m", dealMode);
     if(mapScope) p.set("s", "1");
+    if(WORK){ p.set("w", WORK.lat.toFixed(5) + "," + WORK.lng.toFixed(5) + "," + WORK.n); p.set("r", workR); }   // 직장 위치·거리 제한
     return p.toString();
   }
   function loadHash(){
@@ -2147,6 +2331,12 @@
     if(p.get("a")) areaSel = p.get("a").split(",").map(Number).filter(i => AREA_BANDS[i]);
     if(p.get("m") === "jeonse" && HAS_JEONSE) dealMode = "jeonse";
     if(p.get("s") === "1") mapScope = true;
+    if(p.get("w")){
+      const [la, ln, ...nm] = p.get("w").split(",");
+      if(la && ln && isFinite(+la) && isFinite(+ln)) WORK = { lat: +la, lng: +ln, n: nm.join(",") || "직장" };
+    }
+    if(p.get("r") != null && WORK_RS.includes(+p.get("r"))) workR = +p.get("r");
+    setWorkDist(); buildWork();
     applyWeights(); buildProfiles(); buildDeal();
   }
   window.shareLink = function(){
@@ -2172,7 +2362,7 @@
       // p[7] 최근 거래월, p[9] 그 층, p[10] 그달 건수 (8_build_app.py v0.7.2)
       const when = p[7] ? p[7].slice(2, 4) + '.' + p[7].slice(4) + (p[10] > 1 ? ' · ' + p[10] + '건 중앙값' : (p[9] ? ' · ' + p[9] + '층' : '')) : '-';
       return '<tr><td>' + p[1] + '㎡ <span class="mut">(약 ' + pyg(p[1]) + '평형)</span></td><td class="amt">' + won(p[2]) + '</td>' +
-        (jeon ? '' : '<td>' + when + '</td>') + '<td>' + p[5] + '건 <span class="mut">(' + eok1(p[3]) + '~' + eok1(p[4]) + '억)</span></td></tr>';
+        (jeon ? '' : '<td>' + when + '</td>') + '<td>' + p[5] + '건 <span class="mut">(' + eokRng(p[3], p[4]) + '억)</span></td></tr>';
     }).join('');
     return '<div class="qdeal"><div class="qh">' + (dealMode === "jeonse" ? '조건에 맞는 평형 · 전세 시세' : '조건에 맞는 평형 · 실거래 (국토교통부)') + '</div>' +
       '<table class="pytab"><thead><tr><th>평형</th><th>' + (jeon ? '전세 (1년 중앙값)' : '최근 거래가') + '</th>' + (jeon ? '' : '<th>거래 시점</th>') +
@@ -2472,7 +2662,7 @@
   }
   function wishHTML(w){
     const bar = '<div class="wishbar">' +
-      '<span class="sortnote"><b>종합점수 높은 순</b> · 교통·교육·보육·의료·생활편의 등 9개 항목 점수를 내 상황의 중요도로 평균했어요 ' +
+      '<span class="sortnote"><b>종합점수 높은 순</b> · 교통·교육·보육·의료·주변 환경 등 항목 점수를 내 상황의 중요도로 평균했어요 ' +
       '<button class="linkbtn" onclick="toggleScoreHelp()">' + (scoreHelpOpen ? '닫기' : '자세히') + '</button></span>' +
       '<button class="wishbtn' + (wish.length ? ' has' : '') + '" onclick="openCmp()">' +
       '♥ 찜 ' + wish.length + '곳' + (wish.length >= 2 ? ' · 비교' : wish.length ? ' 보기' : '') + '</button>' +
@@ -2501,7 +2691,7 @@
         '<div class="rank">' + (pin ? '🔍' : rk == null ? '·' : rk) + '</div>' +
         '<div class="info">' +
           '<div class="nm">' + esc(x.n) + (x.al ? ' <span class="al">' + esc(x.al) + '</span>' : '') + ' <span class="chev">' + (open ? '▲' : '▼') + '</span></div>' +
-          '<div class="meta">' + x.d + (x.y ? ' · ' + x.y + '년' : '') + sedMeta + '</div>' +
+          '<div class="meta">' + x.d + (x.y ? ' · ' + x.y + '년' : '') + sedMeta + (WORK && x._wk != null ? ' · 🏢 직장 ' + x._wk.toFixed(1) + 'km' : '') + '</div>' +
           '<div class="price">' + priceTxt + '</div>' +
           badges(x, w, rk ? rk - 1 : -1) + (pin ? pinNote(x, f, rk) : '') +   // 약한 점(주의)은 카드에서 빼고 상세 '확인할 점'에만
         '</div>' +
@@ -2538,6 +2728,7 @@
     let pool = DATA;
     if(gu) pool = pool.filter(x => inRegion(x, gu));
     if(dong) pool = pool.filter(x => x.d === dong);
+    pool = pool.filter(inWorkR);                               // 직장 거리 제한
     pool = pool.filter(x => fitComplex(x, f));                 // 세대수·준공년도
     // '지도에 보이는 곳만'을 골랐을 때만 지도 범위로 좁힌다 (상세 보는 중에는 범위가 고정됨)
     if(scoped()) pool = pool.filter(x => x.lat != null && inBounds(x));
@@ -2560,7 +2751,7 @@
       .sort((a, b) => (GORD[a.x._gate] - GORD[b.x._gate]) || (b.t - a.t));
     markValue(w);                     // 점수 대비 가격 (B8)
     markStable(ranked, w, GORD);      // 안정 추천 (B8)
-    const sig = JSON.stringify(f) + '|' + gu + '|' + dong + '|' + sel.join() + '|' + dealMode + '|' + mapScope;
+    const sig = JSON.stringify(f) + '|' + gu + '|' + dong + '|' + sel.join() + '|' + dealMode + '|' + mapScope + '|' + (WORK ? WORK.lat + ',' + WORK.lng + ',' + workR : '');
     if(sig !== topSig){ topSig = sig; topN = TOP_N; }
     shownList = ranked.slice(0, topN);
     // 색 대비를 위해 현재 목록의 점수 범위로 스케일을 맞춘다
@@ -2575,6 +2766,7 @@
     if(f.areas.length) conds.splice(1, 0, f.areas.map(i => AREA_BANDS[i][0]).join('·'));
     if(gu) conds.push(gu);
     if(dong) conds.push(dong);
+    if(WORK) conds.push('직장 ' + (workR ? workR + 'km 안' : '거리 반영'));
     if(dealMode === "jeonse") conds.unshift("전세");
     const who = sel.length ? personas().map(p => p.name).join('·') + ' · ' : '';
     let label = who + (conds.length ? conds.join(' · ') + ' · ' : '') + pool.length.toLocaleString() + '개 단지' +
@@ -2589,7 +2781,7 @@
     }
     countEl.innerHTML = esc(label) + ' <span class="scope">' + (scoped()
       ? '· 지도에 보이는 곳' + (visG ? ' (' + visG + ')' : '') + ' · 전체 ' + nAll + '곳 중 <button class="linkbtn" onclick="setScope(false)">전체 보기</button>'
-      : ((dong || gu) ? '' : '· 모든 지역 기준') + (!map ? ''
+      : ((dong || gu) ? '' : WORK ? '· 직장 기준' : '· 모든 지역 기준') + (!map ? ''
         : autoScope ? '<span class="deskonly"> · 지도를 움직이면 그 범위로 바뀌어요 <button class="linkbtn" onclick="setAutoScope(false)">끄기</button></span>'
         : ' <span class="deskonly"><button class="linkbtn" onclick="setAutoScope(true)">지도 따라가기 켜기</button></span>')) + '</span>';
     // 휴대폰 지도 화면 위 요약: 상황 · 예산·평형 · 지역 · 개수
@@ -2597,7 +2789,7 @@
     const mapSumEl = document.getElementById("mapSum");
     if(mapSumEl) mapSumEl.innerHTML = (sel.length ? '<b>' + esc(personas().map(p => p.name).join('·')) + '</b> · ' : '') +
       esc(conds.filter(c => c !== gu && c !== dong).join(' · ') || '조건 없음') + ' · ' +
-      esc(scoped() ? (visG || '지도에 보이는 곳') : (dong || gu || '모든 지역')) +
+      esc(scoped() ? (visG || '지도에 보이는 곳') : (dong || gu || (WORK ? '직장 주변' : '모든 지역'))) +
       ' <span>· ' + pool.length + '곳' + (pool.length > topN ? ' (상위 ' + topN + '곳 표시)' : '') + '</span>';
     const panelEl = document.querySelector(".panel");
     if(!ready(f)) panelEl.classList.remove("collapsed");
@@ -2629,7 +2821,9 @@
       // 왜 비었는지 알려 준다: 자료가 없는 지역인지, 조건(예산·평형·꼭 필요한 조건) 때문인지
       const inView = scoped() ? DATA.filter(x => x.lat != null && inBounds(x)).length : -1;
       const loose = scoped() ? countWith(Object.assign({}, f, { pMin: null, pMax: null, areas: [] }), dong, gu) : 0;
-      const msg = inView === 0
+      const nearAll = WORK && workR ? DATA.filter(inWorkR).length : -1;   // 직장 근처에 담긴 단지가 아예 없는지
+      const msg = nearAll === 0 ? '직장 ' + workR + 'km 안은 아직 자료가 없는 지역이에요.<br>거리 제한을 넓히거나 다른 곳을 골라 보세요.'
+        : inView === 0
         ? '지도에 보이는 곳은 아직 자료가 없는 지역이에요.<br><span class="mut">지금 담긴 지역: ' + [...new Set(DATA.map(x => x.g))].join(' · ') + '</span>'
         : scoped()
           ? '지도에 보이는 단지 ' + inView + '곳 중 이 조건에 맞는 곳이 없어요.' + (loose ? '<br>예산·평형 조건을 빼면 ' + loose + '곳이 있어요.' : '')
@@ -2696,7 +2890,7 @@
   });
   dongEl.addEventListener("change", () => {
     expanded = -1; savedView = null; mapScope = false;   // 지역을 직접 고르면 그 지역 전체 기준
-    const c = CENTERS[dongEl.value];
+    const c = CENTERS[guEl.value + "|" + dongEl.value];   // 키 = '구|동' (같은 이름 동이 다른 구에도 있어서)
     // 동을 고르면 그 동 중심으로, '전체'면 선택한 구(없으면 전체)로 이동
     moveMap(c || regionCenter(guEl.value), !!c);
     render(false);
@@ -2742,6 +2936,9 @@
     document.querySelector(".panel").classList.remove("collapsed");
     Object.keys(MANUAL).forEach(clearManual);
     sel = []; Object.keys(opt).forEach(k => { opt[k] = false; });
+    WORK = null; workR = 10; setWorkDist(); buildWork();           // 직장도 지움
+    document.getElementById("workQ").value = ""; document.getElementById("workRes").innerHTML = "";
+    { const wi = document.querySelector('#sliders input[data-idx="10"]'); if(wi){ wi.value = 0; wi.parentNode.querySelector(".val").textContent = 0; } }
     showFailed = false; weightsTouched = false; buildProfiles();
     buildChips();
     expanded = -1; render(false);
@@ -2904,7 +3101,7 @@
   initMap();
   render();
   (function wait(k){                               // 고른 지역(없으면 전 지역)이 보이게 지도 이동 (지도 준비를 기다림)
-    if(map) moveMap(CENTERS[dongEl.value] || regionCenter(guEl.value) || null, !!CENTERS[dongEl.value]);
+    if(map) moveMap((WORK && !guEl.value ? [WORK.lat, WORK.lng] : null) || CENTERS[guEl.value + "|" + dongEl.value] || regionCenter(guEl.value) || null, !!CENTERS[guEl.value + "|" + dongEl.value]);
     else if(k < 50) setTimeout(() => wait(k + 1), 100);
   })(0);
 </script>
